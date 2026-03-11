@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3220a1a44443bc2419a544b9bfbf6649, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  visualizer: {fileID: 7226520025109651428}
   Node1: {fileID: 0}
   Node2: {fileID: 0}
   MoveCost: 2
@@ -59,6 +60,7 @@ GameObject:
   - component: {fileID: 77478301105872475}
   - component: {fileID: 2054414300042981106}
   - component: {fileID: 6957184407565818548}
+  - component: {fileID: 7226520025109651428}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -112,7 +114,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 432521b3bcbff9e45be2fa6d65d2680e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -134,3 +136,17 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &7226520025109651428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8844313761995671279}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 794cab5673c5b4e4e8975a4ba806e800, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  segments: 5
+  HighlightColor: {r: 0.982237, g: 1, b: 0, a: 0}

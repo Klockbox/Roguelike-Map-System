@@ -161,7 +161,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.115
+      value: 4.8950005
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -169,7 +169,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3
+      value: -3.09
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -209,11 +209,23 @@ PrefabInstance:
       objectReference: {fileID: 1997868339}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node C - Node E @ 5'
+      value: 'Connector: Node C - Node E @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8844313761995671279, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -230,7 +242,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 7.23
+      value: 8.05
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -238,7 +250,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -1.28
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -278,11 +290,19 @@ PrefabInstance:
       objectReference: {fileID: 1997868339}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 2
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node D - Node E @ 2'
+      value: 'Connector: Node D - Node E @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -299,7 +319,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.115
+      value: 6.575
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -307,7 +327,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3
+      value: 2.75
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -347,11 +367,19 @@ PrefabInstance:
       objectReference: {fileID: 890140400}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node B - Node D @ 4'
+      value: 'Connector: Node B - Node D @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -368,7 +396,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.31
+      value: 3.1750002
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -376,7 +404,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 4.17
+      value: 4.46
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -416,11 +444,19 @@ PrefabInstance:
       objectReference: {fileID: 615150754}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node B - Node H @ 1'
+      value: 'Connector: Node B - Node H @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1006,7 +1042,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 7.0550003
+      value: 6.63
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1014,7 +1050,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.895
+      value: 0.2249999
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1054,11 +1090,19 @@ PrefabInstance:
       objectReference: {fileID: 1470507556}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 6
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node D - Node G @ 6'
+      value: 'Connector: Node D - Node G @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1075,7 +1119,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.365
+      value: 5.125
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1083,7 +1127,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.56
+      value: 1.4549999
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1123,11 +1167,19 @@ PrefabInstance:
       objectReference: {fileID: 1470507556}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node B - Node G @ 5'
+      value: 'Connector: Node B - Node G @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1144,7 +1196,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 8.73
+      value: 9.665001
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1152,7 +1204,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.5
+      value: -1.6099999
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1192,11 +1244,19 @@ PrefabInstance:
       objectReference: {fileID: 573372670}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 3
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node E - Node F @ 1'
+      value: 'Connector: Node E - Node F @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1397,7 +1457,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3
+      value: 3.42
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1405,7 +1465,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.94000006
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1445,11 +1505,19 @@ PrefabInstance:
       objectReference: {fileID: 1380800125}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 2
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node B - Node C @ 6'
+      value: 'Connector: Node B - Node C @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1613,7 +1681,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 8.73
+      value: 9.695
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1621,7 +1689,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.5
+      value: 1.19
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1661,11 +1729,19 @@ PrefabInstance:
       objectReference: {fileID: 573372670}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 3
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node D - Node F @ 5'
+      value: 'Connector: Node D - Node F @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1885,7 +1961,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.5
+      value: 0.885
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1893,7 +1969,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.5
+      value: -1.05
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1933,11 +2009,19 @@ PrefabInstance:
       objectReference: {fileID: 1380800125}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 2
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node A - Node C @ 5'
+      value: 'Connector: Node A - Node C @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1954,7 +2038,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.465
+      value: 3.475
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1962,7 +2046,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.21
+      value: -1.585
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2002,11 +2086,19 @@ PrefabInstance:
       objectReference: {fileID: 1470507556}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 4
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node C - Node G @ 4'
+      value: 'Connector: Node C - Node G @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2126,7 +2218,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 6.58
+      value: 6.6000004
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2134,7 +2226,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.21
+      value: -2.5749998
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2174,11 +2266,19 @@ PrefabInstance:
       objectReference: {fileID: 1997868339}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 2
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node G - Node E @ 2'
+      value: 'Connector: Node G - Node E @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2263,7 +2363,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.91
+      value: 0.64
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2271,7 +2371,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.9
+      value: 2.47
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2311,11 +2411,23 @@ PrefabInstance:
       objectReference: {fileID: 615150754}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 6
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6957184407565818548, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_StaticShadowCaster
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node A - Node H @ 6'
+      value: 'Connector: Node A - Node H @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2332,7 +2444,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 7.88
+      value: 8.21
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2340,7 +2452,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 4.465
+      value: 4.05
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2380,11 +2492,19 @@ PrefabInstance:
       objectReference: {fileID: 890140400}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 3
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node I - Node D @ 3'
+      value: 'Connector: Node I - Node D @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2778,7 +2898,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 6.375
+      value: 6.705
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2786,7 +2906,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.6949997
+      value: 5.2799997
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2826,11 +2946,19 @@ PrefabInstance:
       objectReference: {fileID: 768815506}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node B - Node I @ 1'
+      value: 'Connector: Node B - Node I @ 0'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2915,7 +3043,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.5
+      value: 2.535
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2923,7 +3051,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.5
+      value: 1.99
       objectReference: {fileID: 0}
     - target: {fileID: 1734935660143355993, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2963,11 +3091,23 @@ PrefabInstance:
       objectReference: {fileID: 2098140916}
     - target: {fileID: 2181935931848328338, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: MoveCost
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7226520025109651428, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: segments
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
       propertyPath: m_Name
-      value: 'Connector: Node A - Node B @ 1'
+      value: 'Connector: Node A - Node B @ 5'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7660886117639068403, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8844313761995671279, guid: 6f500f8aa46c5954c976ff8b49e48be2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
