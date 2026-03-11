@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2356327297863274787}
   - component: {fileID: 3203707192244810532}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Plate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,8 +27,8 @@ Transform:
   m_GameObject: {fileID: 4156960363325703232}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.5, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: -0.1, z: 0}
+  m_LocalScale: {x: 1, y: 0.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4314622246871195212}
@@ -40,7 +40,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4156960363325703232}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!23 &3203707192244810532
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -64,7 +64,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 505ef08b53a03b8418a4b7102d4e44ff, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -153,4 +153,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61a9c380b76626c4b9b66f7eeb0ead7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Connections: []
+  IsExit: 0
+  <CostToReach>k__BackingField: 2147483647
+  <CostToLeave>k__BackingField: 2147483647
+  <CurrentState>k__BackingField: 0
+  visual: {fileID: 3203707192244810532}
+  viableColor: {r: 0.6, g: 0.8, b: 0.4509804, a: 1}
+  outOfReachColor: {r: 0.778, g: 0.347, b: 0.153, a: 1}

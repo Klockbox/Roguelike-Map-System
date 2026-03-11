@@ -6,23 +6,15 @@ using UnityEngine;
 
 public class PlayerMini : SimpleMonoBehaviorSingleton<PlayerMini>
 {
-    public Node currentNode;
-    
-    [field: SerializeField, ReadOnly]
-    public bool IsMoving { get; private set; }
+    public static bool IsMoving { get; private set; }
 
     public static event Action PlayerStartedMove; 
-    public static event Action PlayerEndedMove; 
+    public static event Action<Node> PlayerReachedNode; 
     
-    private void OnValidate()
-    {
-        SetToCurrentNode();
-    }
 
     private void Start()
     {
-        SetToCurrentNode();
-        PlayerEndedMove?.Invoke();
+        SetToNode(MapManager.Instance.PlayerNode);
     }
     
     
@@ -30,20 +22,19 @@ public class PlayerMini : SimpleMonoBehaviorSingleton<PlayerMini>
     {
         IsMoving = true;
         PlayerStartedMove?.Invoke();
-        
-        currentNode = newNode;
-        StartCoroutine(MovePlayer(newNode.transform.position, () => PlayerEndedMove?.Invoke()));
+        StartCoroutine(MovePlayer(newNode));
     }
 
-    private IEnumerator MovePlayer(Vector3 targetPos, Action callback)
+    private IEnumerator MovePlayer(Node node)
     {
-        yield return transform.DOMove(targetPos, 2).WaitForCompletion();
-        callback.Invoke();
+        yield return transform.DOMove(node.transform.position, 2).WaitForCompletion();
+        IsMoving = false;
+        SetToNode(node);
     }
 
-    private void SetToCurrentNode()
+    public void SetToNode(Node node)
     {
-        if(!currentNode) return;
-        transform.position = currentNode.transform.position;
+        transform.position = node.transform.position;
+        PlayerReachedNode?.Invoke(node);
     }
 }

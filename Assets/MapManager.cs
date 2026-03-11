@@ -7,70 +7,92 @@ using Random = UnityEngine.Random;
 
 public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 {
+    [SerializeField] private PlayerMini playerMini;
+    [field: SerializeField] public Node PlayerNode { get; private set; }
+
+    
+    public static event Action<int> OnFuelChanged;
+    [SerializeField, BoxGroup("Fuel")] private int startingFuel;
+    [SerializeField, ReadOnly, BoxGroup("Fuel")] private int currentFuel;
+    public int CurrentFuel
+    {
+        get => currentFuel;
+        private set
+        {
+            currentFuel = value;
+            OnFuelChanged?.Invoke(currentFuel);
+        }
+    }
+    
+    
+    
+    private Dictionary<Node, Waypoint> waypointsToReach = new();
+    private Dictionary<Node, Waypoint> waypointsToLeave = new();
+    
+    private bool AcceptInput()
+    {
+        return !PlayerMini.IsMoving;
+    }
+    
     private void OnEnable()
     {
         Node.NodeClicked += OnNodeClicked;
         PlayerMini.PlayerStartedMove += OnPlayerMoving;
-        PlayerMini.PlayerEndedMove += OnPlayerStopped;
+        PlayerMini.PlayerReachedNode += OnPlayerReachedNode;
     }
     private void OnDisable()
     {
         Node.NodeClicked -= OnNodeClicked;
         PlayerMini.PlayerStartedMove -= OnPlayerMoving;
-        PlayerMini.PlayerEndedMove -= OnPlayerStopped;
+        PlayerMini.PlayerReachedNode -= OnPlayerReachedNode;
     }
 
-    
+    protected override void Awake()
+    {
+        base.Awake();
+        CurrentFuel = startingFuel;
+    }
+
+    private void Start()
+    {
+        CalculateCostsToLeave();
+        playerMini.SetToNode(PlayerNode);
+    }
+
     private void OnPlayerMoving()
     {
         
     }
 
-    private void OnPlayerStopped()
+    private void OnPlayerReachedNode(Node node)
     {
-        CalculateCosts();
+        PlayerNode = node;
+        CalculateCostsToReach();
     }
     
-    [Button]
-    private void CalculateCosts()
-    {
-        CalculateDijkstra(PlayerMini.Instance.currentNode, ECostType.CostToReach);
-        CalculateDijkstra(Node.s_ExitNodes[0], ECostType.CostToLeave);
-    }
-    
-    private void CalculateDijkstra(Node startingNode, ECostType costType)
+    private Dictionary<Node, Waypoint> CalculateDijkstra(Node startingNode, ECostType costType)
     {
         // set up dict table
         Dictionary<Node, Waypoint> waypoints = Node.s_Nodes.ToDictionary(node => node, node => new Waypoint(node, int.MaxValue, null));
 
         // set up starting node
         waypoints[startingNode].LowestMoveCost = 0; // no dist because we are already there
-        switch (costType)
-        {
-            case ECostType.CostToReach:
-                startingNode.SetCostToReach(0);
-                break;
-            case ECostType.CostToLeave:
-                startingNode.SetCostToLeave(0);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(costType), costType, null);
-        }
         
+        List<Waypoint> unvisitedWaypoints = waypoints.Values.ToList();
         
-        while (waypoints.Values.Any(x => !x.Visited))
+        for (int i = 0; i < waypoints.Count; i++)
         {
-            List<Waypoint> unvisitedWaypoints = waypoints.Values.Where(waypoint => !waypoint.Visited).ToList();
-            
             // grab closest waypoint
             Waypoint closestWaypoint = unvisitedWaypoints[0];
             foreach (Waypoint waypointToCheck in unvisitedWaypoints)
-                if (waypointToCheck.LowestMoveCost < closestWaypoint.LowestMoveCost) closestWaypoint = waypointToCheck;
+                if (waypointToCheck.LowestMoveCost < closestWaypoint.LowestMoveCost) 
+                    closestWaypoint = waypointToCheck;
             
+            //set base move cost for next check
             int baseMovementCost = closestWaypoint.LowestMoveCost;
             
-            // iterate through connections
-            List<Connector> connections = Connector.GetAllConnectionsFrom(closestWaypoint.Node);
+            // iterate through connections and update lowest costs if applicable
+            List<Connector> connections = Connector.GetAllConnectorsFrom(closestWaypoint.Node);
             foreach (Connector connection in connections)
             {
                 Node connectedNode = connection.GetOther(closestWaypoint.Node);
@@ -80,59 +102,74 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
                 if (totalCostToConnectedNode >= waypoint.LowestMoveCost) continue;
                 
                 waypoint.LowestMoveCost = totalCostToConnectedNode;
-                waypoint.PreviousPrevNode = closestWaypoint.Node;
-
-                switch (costType)
-                {
-                    case ECostType.CostToReach:
-                        waypoint.Node.SetCostToReach(totalCostToConnectedNode);
-                        break;
-                    case ECostType.CostToLeave:
-                        waypoint.Node.SetCostToLeave(totalCostToConnectedNode);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(costType), costType, null);
-                }
-                
+                waypoint.PreviousNode = closestWaypoint.Node;
             }
-            closestWaypoint.Visited = true;
-        }
-
-        foreach (Waypoint waypoint in waypoints.Values)
-        {
-            Debug.Log($"Closest dist from {startingNode.name} to {waypoint.Node.name} is {waypoint.LowestMoveCost}");
+            unvisitedWaypoints.Remove(closestWaypoint);
         }
         
+        // write values to node objects
+        foreach (Waypoint waypoint in waypoints.Values)
+            waypoint.Node.SetCost(waypoint.LowestMoveCost, costType);
+        
+        return waypoints;
     }
+    
+    private void CalculateCostsToReach() => waypointsToReach = CalculateDijkstra(PlayerNode, ECostType.CostToReach);
+    private void CalculateCostsToLeave() => waypointsToLeave = CalculateDijkstra(Node.s_ExitNodes[0], ECostType.CostToLeave);
     
     private void OnNodeClicked(Node clickedNode)
     {
-        // check move legality
-        List<Connector> neighborConnections = Connector.GetAllConnectionsFrom(PlayerMini.Instance.currentNode);
-        Connector connection = neighborConnections.FirstOrDefault(connector => connector.Connects(clickedNode));
+        if(clickedNode == PlayerNode || !AcceptInput()) return;
+
+        Node targetNode = clickedNode;
         
-        if (!connection)
+        bool canMoveDirectly = Connector.TryGetConnector(PlayerNode, clickedNode, out Connector directConnector) &&
+                               directConnector.MoveCost <= CurrentFuel;
+        
+        // if not neighboring get next node on optimal route
+        if (!canMoveDirectly)
         {
-            Debug.Log($"No valid connection found between {PlayerMini.Instance.currentNode.name} and {clickedNode.name}.");
+            Waypoint waypoint = waypointsToReach[clickedNode];
+            for (int i = 0; i < waypointsToReach.Count; i++)
+            {
+                if(waypoint.PreviousNode == PlayerNode) break;
+                waypoint = waypointsToReach[waypoint.PreviousNode];
+            }
+            
+            targetNode = waypoint.Node;
+        }
+        
+        // try grab connector from player node to target node
+        if(!Connector.TryGetConnector(PlayerNode, targetNode, out Connector connector))
+        {
+            Debug.Log($"No connector connects {PlayerNode.name} to {targetNode.name}.");
             return;
         }
         
-        PlayerMini.Instance.MoveToNode(clickedNode);
+        if(targetNode.CurrentState is NodeState.OutOfReach)
+        {
+            Debug.Log($"Reaching {targetNode.name} costs {targetNode.CostToReach}." +
+                      $" To reach the exit then it would cost {targetNode.CostToLeave}, for a total cost of {targetNode.TotalCost}." +
+                      $" This exceeds the fuel reserves of {CurrentFuel}.");
+            return;
+        }
+        
+        // here the move is legal
+        CurrentFuel -= connector.MoveCost;
+        PlayerMini.Instance.MoveToNode(targetNode);
     }
 
     public class Waypoint
     {
         public Node Node { get; private set; }
         public int LowestMoveCost;
-        public Node PreviousPrevNode;
-        public bool Visited;
+        public Node PreviousNode;
 
         public Waypoint(Node node, int dist, Node prevNode)
         {
             Node = node;
             LowestMoveCost = dist;
-            PreviousPrevNode = prevNode;
-            Visited = false;
+            PreviousNode = prevNode;
         }
     }
 }
