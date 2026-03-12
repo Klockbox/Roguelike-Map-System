@@ -9,9 +9,13 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 {
     [SerializeField] private PlayerMini playerMini;
     [field: SerializeField] public Node PlayerNode { get; private set; }
-
-    
+    [field: SerializeField, ReadOnly] public Node HoveredNode { get; private set; }
+    [field: SerializeField, ReadOnly, BoxGroup("Move Preview")] public Node TargetedNode { get; private set; }
+    [field: SerializeField, ReadOnly, BoxGroup("Move Preview")] public bool LegalMove { get; private set; }
+    [field: SerializeField, ReadOnly, BoxGroup("Move Preview")] public int TargetMoveCost { get; private set; }
     public static event Action<int> OnFuelChanged;
+    public static event Action<int> MovePreviewChanged;
+    
     [SerializeField, BoxGroup("Fuel")] private int startingFuel;
     [SerializeField, ReadOnly, BoxGroup("Fuel")] private int currentFuel;
     public int CurrentFuel
@@ -24,12 +28,10 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         }
     }
     
-    
-    
     private Dictionary<Node, Waypoint> waypointsToReach = new();
     private Dictionary<Node, Waypoint> waypointsToLeave = new();
     
-    private bool AcceptInput()
+    private bool CurrentlyAcceptingInput()
     {
         return !PlayerMini.IsMoving;
     }
@@ -37,15 +39,23 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     private void OnEnable()
     {
         Node.NodeClicked += OnNodeClicked;
-        PlayerMini.PlayerStartedMove += OnPlayerMoving;
+        Node.NodeHoverChanged += OnHoveringChanged;
+        
+        PlayerMini.PlayerStartedMove += OnPlayerStartMoving;
         PlayerMini.PlayerReachedNode += OnPlayerReachedNode;
     }
+
+    
+
     private void OnDisable()
     {
         Node.NodeClicked -= OnNodeClicked;
-        PlayerMini.PlayerStartedMove -= OnPlayerMoving;
+        Node.NodeHoverChanged -= OnHoveringChanged;
+        
+        PlayerMini.PlayerStartedMove -= OnPlayerStartMoving;
         PlayerMini.PlayerReachedNode -= OnPlayerReachedNode;
     }
+    
 
     protected override void Awake()
     {
@@ -55,19 +65,20 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 
     private void Start()
     {
-        CalculateCostsToLeave();
         playerMini.SetToNode(PlayerNode);
+        CalculateCostsToLeave();
+        CalculateCostsToReach();
     }
 
-    private void OnPlayerMoving()
+    private void OnPlayerStartMoving()
     {
-        
+        CalculateCostsToReach();
+        UpdateHoverPreview();
     }
 
     private void OnPlayerReachedNode(Node node)
     {
-        PlayerNode = node;
-        CalculateCostsToReach();
+        
     }
     
     private Dictionary<Node, Waypoint> CalculateDijkstra(Node startingNode, ECostType costType)
@@ -117,46 +128,105 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     private void CalculateCostsToReach() => waypointsToReach = CalculateDijkstra(PlayerNode, ECostType.CostToReach);
     private void CalculateCostsToLeave() => waypointsToLeave = CalculateDijkstra(Node.s_ExitNodes[0], ECostType.CostToLeave);
     
-    private void OnNodeClicked(Node clickedNode)
+    private void OnHoveringChanged(Node hoveredNode)
     {
-        if(clickedNode == PlayerNode || !AcceptInput()) return;
+        HoveredNode = hoveredNode;
+        UpdateHoverPreview();
+    }
 
-        Node targetNode = clickedNode;
+    private void UpdateHoverPreview()
+    {
+        EndHoverPreview();
+        if (HoveredNode && HoveredNode != PlayerNode)
+            EvaluateHoveredNode();
         
-        bool canMoveDirectly = Connector.TryGetConnector(PlayerNode, clickedNode, out Connector directConnector) &&
-                               directConnector.MoveCost <= CurrentFuel;
+        MovePreviewChanged?.Invoke(TargetMoveCost);
+    }
+
+    private void EvaluateHoveredNode()
+    {
+        LegalMove = false;
+        if(HoveredNode == PlayerNode) return;
         
-        // if not neighboring get next node on optimal route
-        if (!canMoveDirectly)
+        bool hoveredNodeIsNeighbor = Connector.TryGetConnector(PlayerNode, HoveredNode, out Connector connectorToNeighbor);
+        bool canMoveDirectlyToHoveredNode = 
+            hoveredNodeIsNeighbor // is it a neighbor?
+            && connectorToNeighbor.MoveCost <= CurrentFuel // can I cover the direct movement cost?
+            && HoveredNode.TotalCost <= CurrentFuel; // can you still leave from there?
+        
+        List<Waypoint> routeBeyondTarget = new ();
+        
+        if (canMoveDirectlyToHoveredNode)
         {
-            Waypoint waypoint = waypointsToReach[clickedNode];
+            TargetedNode = HoveredNode;
+        }
+        else
+        {
+            // construct route
+            Waypoint evaluatedWaypoint = waypointsToReach[HoveredNode];
             for (int i = 0; i < waypointsToReach.Count; i++)
             {
-                if(waypoint.PreviousNode == PlayerNode) break;
-                waypoint = waypointsToReach[waypoint.PreviousNode];
+                if (evaluatedWaypoint.PreviousNode == PlayerNode)
+                {
+                    TargetedNode = evaluatedWaypoint.Node;
+                    break;
+                }
+                routeBeyondTarget.Add(evaluatedWaypoint);
+                evaluatedWaypoint = waypointsToReach[evaluatedWaypoint.PreviousNode];
             }
+        }
+        
+        //evaluate target
+        Connector.TryGetConnector(PlayerNode, TargetedNode, out Connector moveConnector);
+        TargetMoveCost = moveConnector.MoveCost;
+        LegalMove = TargetedNode.TotalCost <= CurrentFuel;
+        
+        
+        
+        //highlight connectors and nodes
+        TargetedNode.CurrentTargetingState = TargetingState.Targeted;
+        if (Connector.TryGetConnector(PlayerNode, TargetedNode, out Connector connectorToTarget))
+            connectorToTarget.HighlightState = HighlightState.Highlighted;
+        
             
-            targetNode = waypoint.Node;
-        }
-        
-        // try grab connector from player node to target node
-        if(!Connector.TryGetConnector(PlayerNode, targetNode, out Connector connector))
+        foreach (Waypoint waypoint in routeBeyondTarget)
         {
-            Debug.Log($"No connector connects {PlayerNode.name} to {targetNode.name}.");
-            return;
+            waypoint.Node.CurrentTargetingState = TargetingState.Hovered;
+            
+            if (Connector.TryGetConnector(waypoint.Node, waypoint.PreviousNode, out Connector connector))
+            {
+                connector.HighlightState = HighlightState.LightlyHighlighted;
+            }
         }
+    }
+
+    private void EndHoverPreview()
+    {
+        TargetedNode = null;
+        LegalMove = false;
+        TargetMoveCost = 0;
+
+        foreach (Node node in Node.s_Nodes)
+            node.CurrentTargetingState = TargetingState.Idle;
         
-        if(targetNode.CurrentState is NodeState.OutOfReach)
+        foreach (Connector connector in Connector.s_Connectors)
+            connector.HighlightState = HighlightState.NotHighlighted;
+    }
+    
+    
+    
+    private void OnNodeClicked(Node clickedNode)
+    {
+        if (!LegalMove
+            || !CurrentlyAcceptingInput()
+            || !Connector.TryGetConnector(PlayerNode, TargetedNode, out Connector connector))
         {
-            Debug.Log($"Reaching {targetNode.name} costs {targetNode.CostToReach}." +
-                      $" To reach the exit then it would cost {targetNode.CostToLeave}, for a total cost of {targetNode.TotalCost}." +
-                      $" This exceeds the fuel reserves of {CurrentFuel}.");
             return;
-        }
+        } 
         
-        // here the move is legal
-        CurrentFuel -= connector.MoveCost;
-        PlayerMini.Instance.MoveToNode(targetNode);
+        PlayerNode = TargetedNode;
+        CurrentFuel -= TargetMoveCost;
+        PlayerMini.Instance.MoveToNode(TargetedNode);
     }
 
     public class Waypoint

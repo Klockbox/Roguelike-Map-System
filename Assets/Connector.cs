@@ -19,30 +19,47 @@ public class Connector : MonoBehaviour
         connector = s_Connectors.FirstOrDefault(c => c.Connects(nodeA) && c.Connects(nodeB));
         return connector != null;
     }
-    
     #endregion
 
-    [SerializeField] private ConnectorVisualization visualizer;
+    
+    //###############| instanced behavior |###############
+    [Header("References")]
+    [SerializeField] 
+    private ConnectionMeshGenerator meshGenerator;
+    [SerializeField] 
+    private ConnectorVisuals visuals;
 
-    public Node Node1, Node2;
-    public int MoveCost = 0;
+    [Header("Info")] 
+    public Node Node1; 
+    public Node Node2;
+    public int MoveCost;
     private bool IsValid => Node1 && Node2 && Node1 != Node2;
 
-    private HighlightState _highlight = HighlightState.NotHighlighted;
-
-    public HighlightState Highlight
+    [SerializeField, ReadOnly]
+    private HighlightState _highlightState = HighlightState.NotHighlighted;
+    public HighlightState HighlightState
     {
-        get => _highlight;
+        get => _highlightState;
         set
         {
-            _highlight = value;
-            visualizer?.SetHighlight(_highlight);
+            _highlightState = value;
+            HighlightStateChanged?.Invoke(_highlightState);
         }
     }
-    
-    private void Awake() { MoveCost = Random.Range(1, 7); }
+    public event Action<HighlightState> HighlightStateChanged;
+
+    private void Awake()
+    {
+        MoveCost = Random.Range(1, 7);
+        visuals?.SetCostText(MoveCost);
+    }
     private void OnEnable() { s_Connectors.Add(this); }
     private void OnDisable() { s_Connectors.Remove(this); }
+
+    private void OnDestroy()
+    {
+        HighlightStateChanged = null; // clean all listeners
+    }
 
     private void Start()
     {
@@ -72,14 +89,15 @@ public class Connector : MonoBehaviour
         transform.position = Node1.transform.position + (Node2.transform.position - Node1.transform.position) / 2;
         name = $"Connector: {Node1.name} - {Node2.name} @ {MoveCost}";
         
-        if(Application.isPlaying)
-            visualizer?.GenerateMesh(Node1.transform.position, Node2.transform.position);
+        if(!Application.isPlaying) return;
+        
+        meshGenerator?.GenerateMesh(Node1.transform.position, Node2.transform.position);
     }
     
     [Button]
     private void DebugCycleHighlight()
     {
-        Highlight = Highlight switch
+        HighlightState = HighlightState switch
         {
             HighlightState.NotHighlighted => HighlightState.LightlyHighlighted,
             HighlightState.LightlyHighlighted => HighlightState.Highlighted,

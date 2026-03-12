@@ -11,18 +11,12 @@ public class PlayerMini : SimpleMonoBehaviorSingleton<PlayerMini>
     public static event Action PlayerStartedMove; 
     public static event Action<Node> PlayerReachedNode; 
     
-
-    private void Start()
-    {
-        SetToNode(MapManager.Instance.PlayerNode);
-    }
-    
-    
     public void MoveToNode(Node newNode)
     {
         IsMoving = true;
         PlayerStartedMove?.Invoke();
         StartCoroutine(MovePlayer(newNode));
+        transform.rotation = Quaternion.LookRotation((newNode.transform.position - transform.position).normalized, Vector3.up);
     }
 
     private IEnumerator MovePlayer(Node node)

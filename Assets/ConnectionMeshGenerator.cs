@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-public class ConnectorVisualization : MonoBehaviour
+public class ConnectionMeshGenerator : MonoBehaviour
 {
     [SerializeField]
     private int segments = 5;
@@ -15,7 +15,6 @@ public class ConnectorVisualization : MonoBehaviour
     {
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
-        baseColor = meshRenderer.material.color;
     }
 
     public void GenerateMesh (Vector3 startNodeWorldPos, Vector3 endNodeWorldPos) 
@@ -72,32 +71,21 @@ public class ConnectorVisualization : MonoBehaviour
         meshFilter.mesh = mesh;
     }
 
-    private Color baseColor;
-    public Color HighlightColor;
+}
 
-    public void SetHighlight(HighlightState state)
-    {
-        switch (state)
-        {
-            case HighlightState.NotHighlighted:
-                meshRenderer.material.color = baseColor;
-                break;
-            case HighlightState.LightlyHighlighted:
-                meshRenderer.material.color = NegativeMultiplyBlend(baseColor, HighlightColor, 0.5f);
-                break;
-            case HighlightState.Highlighted:
-                meshRenderer.material.color = HighlightColor;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(state), state, null);
-        }
-    }
-
-    private Color NegativeMultiplyBlend(Color origColor, Color overlay, float percent = 1)
+public static class ColorUtility
+{
+    public static Color NegativeMultiplyBlend(Color origColor, Color overlay, float percent = 1)
     {
         Color invertedA = new Color(1 - origColor.r, 1 - origColor.g, 1 - origColor.b);
         Color invertedB = new Color(1 - overlay.r, 1 - overlay.g, 1 - overlay.b);
         Color fullNegMult = new Color(1 - invertedA.r * invertedB.r,1 - invertedA.g * invertedB.g,1 - invertedA.b * invertedB.b);
+        return Color.Lerp(origColor, fullNegMult, percent);
+    }
+    
+    public static Color MultiplyBlend(Color origColor, Color overlay, float percent = 1)
+    {
+        Color fullNegMult = new ( origColor.r * overlay.r, origColor.g * overlay.g, origColor.b * overlay.b);
         return Color.Lerp(origColor, fullNegMult, percent);
     }
 }

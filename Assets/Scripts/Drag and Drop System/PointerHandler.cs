@@ -97,14 +97,10 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
         if(value == hoveredObject) return; // if same as last frame, nothing happens.
 
         isHoveringSomething = value != null;
-        
-        if (!isHoveringSomething)
-            hoveredObject.OnHoverEnd();
-        
+
+        hoveredObject?.OnHoverEnd();
         hoveredObject = value;
-        
-        if (isHoveringSomething)
-            hoveredObject.OnHoverStart();
+        hoveredObject?.OnHoverStart();
     }
     
     

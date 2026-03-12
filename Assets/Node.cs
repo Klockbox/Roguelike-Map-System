@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NaughtyAttributes;
@@ -12,8 +13,15 @@ public class Node : MonoBehaviour, IClickableObject
     public static List<Node> s_Nodes = new List<Node>();
     public static List<Node> s_ExitNodes = new List<Node>();
     
-    public static event Action<Node> NodeClicked; 
+    public static event Action<Node> NodeClicked;
+    public static event Action<Node> NodeHoverChanged;
     #endregion
+    
+    //###############| instanced class behavior |###############
+    [Header("References")]
+    [SerializeField]
+    private MeshRenderer visual;
+    
     
     public bool IsExit;
     
@@ -22,22 +30,52 @@ public class Node : MonoBehaviour, IClickableObject
     public int TotalCost => CostToLeave + CostToReach;
 
     [field: SerializeField, ReadOnly, BoxGroup("Info")]
-    private NodeState _currentState = NodeState.Viable;
-    public NodeState CurrentState
+    private NodeState _currentNodeState = NodeState.InReach;
+    public NodeState CurrentNodeState
     {
-        get => _currentState;
+        get => _currentNodeState;
         private set
         {
-            _currentState = value;
-            visual.material.color = _currentState is NodeState.Viable ? viableColor : outOfReachColor;
+            _currentNodeState = value;
+            UpdateBaseColor();
+        } 
+    }
+    
+    [field: SerializeField, ReadOnly, BoxGroup("Info")]
+    private TargetingState currentTargetingState = TargetingState.Idle;
+    public TargetingState CurrentTargetingState
+    {
+        get => currentTargetingState;
+        set
+        {
+            currentTargetingState = value;
+            UpdateBaseColor();
         } 
     }
 
-    [SerializeField]
-    private MeshRenderer visual;
-    [SerializeField] private Color viableColor;
+    private bool _previewingOutOfReach;
+    public bool PreviewingOutOfReach
+    {
+        get => _previewingOutOfReach;
+        set
+        {
+            _previewingOutOfReach = value;
+            if(_previewingOutOfReach)
+                StartCoroutine(PreviewOutOfReach()); // it stops in itself when bool is false
+        } 
+    }
+
+    private Color idleColor;
+    private Color baseColor;
     [SerializeField] private Color outOfReachColor;
+    [SerializeField] private Color legalColor;
+    [SerializeField] private Color illegalColor;
     
+    private void Awake()
+    {
+        idleColor = visual.material.color;
+    }
+
     private void OnEnable()
     {
         s_Nodes.Add(this);
@@ -56,7 +94,7 @@ public class Node : MonoBehaviour, IClickableObject
         {
             case ECostType.CostToReach:
                 CostToReach = newCost;
-                CurrentState = TotalCost <= MapManager.Instance.CurrentFuel ? NodeState.Viable : NodeState.OutOfReach;
+                CurrentNodeState = TotalCost <= MapManager.Instance.CurrentFuel ? NodeState.InReach : NodeState.OutOfReach;
                 break;
             case ECostType.CostToLeave:
                 CostToLeave = newCost;
@@ -65,16 +103,59 @@ public class Node : MonoBehaviour, IClickableObject
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
     }
-    private void OnDrawGizmos()
+    
+    private void UpdateBaseColor()
     {
-        string labelText = $"{name}";
-        if (IsExit) labelText += " - Exit";
-        labelText += $"\nState: {CurrentState}";
-        labelText += $"\nctR: {CostToReach}";
-        labelText += $"\nctL: {CostToLeave}";
-        labelText += $"\ntC: {TotalCost}";
+        baseColor = idleColor;
+
+        switch (CurrentTargetingState)
+        {
+            case TargetingState.Idle when CurrentNodeState is NodeState.OutOfReach:
+                baseColor = outOfReachColor;
+                break;
+            case TargetingState.Hovered when CurrentNodeState is NodeState.InReach:
+                baseColor = ColorUtility.NegativeMultiplyBlend(idleColor, legalColor, 0.2f);
+                break;
+            case TargetingState.Hovered when CurrentNodeState is NodeState.OutOfReach:
+                baseColor = ColorUtility.MultiplyBlend(idleColor, illegalColor, 0.2f);
+                break;
+            case TargetingState.Targeted when CurrentNodeState is NodeState.InReach:
+                baseColor = ColorUtility.NegativeMultiplyBlend(idleColor, legalColor, 0.5f);
+                break;
+            case TargetingState.Targeted when CurrentNodeState is NodeState.OutOfReach:
+                baseColor = ColorUtility.MultiplyBlend(idleColor, illegalColor, 0.5f);
+                break;
+        }
         
-        Handles.Label(transform.position, labelText, EditorStyles.label);
+        visual.material.color = baseColor;
+    }
+
+    [Button]
+    private void StartPrev()
+    {
+        PreviewingOutOfReach = true;
+    }
+    
+    [Button]
+    private void StopPrev()
+    {
+        PreviewingOutOfReach = false;
+    }
+    
+    private IEnumerator PreviewOutOfReach()
+    {
+        float timer = 0;
+        
+        while (_previewingOutOfReach)
+        {
+            timer += Time.deltaTime * 4;
+            float delta = (Mathf.Sin(timer) + 1) / 2;
+            delta *= 0.5f;
+            visual.material.color = ColorUtility.MultiplyBlend(baseColor, illegalColor, delta);
+            yield return null;
+        }
+
+        visual.material.color = baseColor;
     }
     
     public void OnPointerUpAsClick()
@@ -82,23 +163,50 @@ public class Node : MonoBehaviour, IClickableObject
         Debug.Log($"Clicked on {gameObject.name}.");
         NodeClicked?.Invoke(this);
     }
+
+    public void OnHoverStart()
+    {
+        NodeHoverChanged?.Invoke(this);
+    }
+
+    public void OnHoverEnd()
+    {
+        NodeHoverChanged?.Invoke(null);
+    }
     
-    public void OnHoverStart() { }
+    private void OnDrawGizmos()
+    {
+        string labelText = $"{name}";
+        if (IsExit) labelText += " - Exit";
+        labelText += $"\nState: {CurrentNodeState}";
+        labelText += $"\nctR: {CostToReach}";
+        labelText += $"\nctL: {CostToLeave}";
+        labelText += $"\ntC: {TotalCost}";
+        
+        Handles.Label(transform.position, labelText, EditorStyles.label);
+    }
 
-    public void OnHoverEnd() { }
-
+    #region UnusedInterface
     public void OnPointerDown() { }
-    
     public void OnPointerHold() { }
     public void OnPointerUp() { }
     public void OnDragStart(Vector2 pointerPos) { }
     public void OnDrag(Vector2 pointerPos) { }
     public void OnDragEnd(Vector2 pointerPos) { }
     public bool IsDraggable() => true;
+    #endregion
+    
 }
 
 public enum NodeState : byte
 {
-    Viable,
+    InReach,
     OutOfReach
+}
+
+public enum TargetingState : byte
+{
+    Idle,
+    Hovered,
+    Targeted
 }
