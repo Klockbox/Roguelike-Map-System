@@ -81,7 +81,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         
     }
     
-    private Dictionary<Node, Waypoint> CalculateDijkstra(Node startingNode, ECostType costType)
+    private static Dictionary<Node, Waypoint> CalculateDijkstra(Node startingNode)
     {
         // set up dict table
         Dictionary<Node, Waypoint> waypoints = Node.s_Nodes.ToDictionary(node => node, node => new Waypoint(node, int.MaxValue, null));
@@ -118,16 +118,25 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
             unvisitedWaypoints.Remove(closestWaypoint);
         }
         
-        // write values to node objects
-        foreach (Waypoint waypoint in waypoints.Values)
-            waypoint.Node.SetCost(waypoint.LowestMoveCost, costType);
-        
         return waypoints;
     }
     
-    private void CalculateCostsToReach() => waypointsToReach = CalculateDijkstra(PlayerNode, ECostType.CostToReach);
-    private void CalculateCostsToLeave() => waypointsToLeave = CalculateDijkstra(Node.s_ExitNodes[0], ECostType.CostToLeave);
-    
+    private void CalculateCostsToReach()
+    {
+        waypointsToReach = CalculateDijkstra(PlayerNode);
+        
+        // write values to node objects
+        foreach (Waypoint waypoint in waypointsToReach.Values)
+            waypoint.Node.SetCost(waypoint.LowestMoveCost, ECostType.CostToReach);
+    } 
+    private void CalculateCostsToLeave()
+    {
+        waypointsToLeave = CalculateDijkstra(Node.s_ExitNodes[0]);
+        // write values to node objects
+        foreach (Waypoint waypoint in waypointsToLeave.Values)
+            waypoint.Node.SetCost(waypoint.LowestMoveCost, ECostType.CostToLeave);
+    }
+
     private void OnHoveringChanged(Node hoveredNode)
     {
         HoveredNode = hoveredNode;
@@ -149,12 +158,12 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         if(HoveredNode == PlayerNode) return;
         
         bool hoveredNodeIsNeighbor = Connector.TryGetConnector(PlayerNode, HoveredNode, out Connector connectorToNeighbor);
+        
+        // check if we can ignore routing
         bool canMoveDirectlyToHoveredNode = 
             hoveredNodeIsNeighbor // is it a neighbor?
             && connectorToNeighbor.MoveCost <= CurrentFuel // can I cover the direct movement cost?
-            && HoveredNode.TotalCost <= CurrentFuel; // can you still leave from there?
-        
-        List<Waypoint> routeBeyondTarget = new ();
+            && connectorToNeighbor.MoveCost + HoveredNode.CostToLeave <= CurrentFuel; // can you still leave from there?
         
         if (canMoveDirectlyToHoveredNode)
         {
@@ -162,6 +171,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         }
         else
         {
+            List<Waypoint> routeBeyondTarget = new ();
             // construct route
             Waypoint evaluatedWaypoint = waypointsToReach[HoveredNode];
             for (int i = 0; i < waypointsToReach.Count; i++)
@@ -174,6 +184,16 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
                 routeBeyondTarget.Add(evaluatedWaypoint);
                 evaluatedWaypoint = waypointsToReach[evaluatedWaypoint.PreviousNode];
             }
+            
+            foreach (Waypoint waypoint in routeBeyondTarget)
+            {
+                waypoint.Node.CurrentTargetingState = TargetingState.Hovered;
+            
+                if (Connector.TryGetConnector(waypoint.Node, waypoint.PreviousNode, out Connector connector))
+                {
+                    connector.HighlightState = HighlightState.LightlyHighlighted;
+                }
+            }
         }
         
         //evaluate target
@@ -181,22 +201,19 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         TargetMoveCost = moveConnector.MoveCost;
         LegalMove = TargetedNode.TotalCost <= CurrentFuel;
         
-        
-        
         //highlight connectors and nodes
         TargetedNode.CurrentTargetingState = TargetingState.Targeted;
         if (Connector.TryGetConnector(PlayerNode, TargetedNode, out Connector connectorToTarget))
             connectorToTarget.HighlightState = HighlightState.Highlighted;
         
-            
-        foreach (Waypoint waypoint in routeBeyondTarget)
+        // out of reach preview
+        Dictionary<Node, Waypoint> waypoints = CalculateDijkstra(TargetedNode);
+        foreach (Waypoint waypoint in waypoints.Values)
         {
-            waypoint.Node.CurrentTargetingState = TargetingState.Hovered;
-            
-            if (Connector.TryGetConnector(waypoint.Node, waypoint.PreviousNode, out Connector connector))
-            {
-                connector.HighlightState = HighlightState.LightlyHighlighted;
-            }
+            if(waypoint.Node.CurrentNodeState is NodeState.OutOfReach) continue;
+            bool willBeOutOfReach = (waypoint.LowestMoveCost + waypoint.Node.CostToLeave) > CurrentFuel - TargetMoveCost;
+            if (willBeOutOfReach)
+                waypoint.Node.PreviewingOutOfReach = true;
         }
     }
 
@@ -207,7 +224,11 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         TargetMoveCost = 0;
 
         foreach (Node node in Node.s_Nodes)
+        {
             node.CurrentTargetingState = TargetingState.Idle;
+            node.PreviewingOutOfReach = false;
+        }
+            
         
         foreach (Connector connector in Connector.s_Connectors)
             connector.HighlightState = HighlightState.NotHighlighted;
