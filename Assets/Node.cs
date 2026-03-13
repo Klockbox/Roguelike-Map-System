@@ -106,41 +106,68 @@ public class Node : MonoBehaviour, IClickableObject
     
     private void UpdateBaseColor()
     {
-        baseColor = idleColor;
+        baseColor = CurrentNodeState switch
+        {
+            NodeState.InReach => idleColor,
+            NodeState.OutOfReach => outOfReachColor,
+            _ => baseColor
+        };
 
         switch (CurrentTargetingState)
         {
-            case TargetingState.Idle when CurrentNodeState is NodeState.OutOfReach:
-                baseColor = outOfReachColor;
-                break;
             case TargetingState.Hovered when CurrentNodeState is NodeState.InReach:
-                baseColor = ColorUtility.NegativeMultiplyBlend(idleColor, legalColor, 0.2f);
+                baseColor = ColorUtility.NegativeMultiplyBlend(baseColor, legalColor, 0.4f);
                 break;
             case TargetingState.Hovered when CurrentNodeState is NodeState.OutOfReach:
-                baseColor = ColorUtility.MultiplyBlend(idleColor, illegalColor, 0.2f);
+                baseColor = ColorUtility.MultiplyBlend(baseColor, illegalColor, 0.6f);
                 break;
             case TargetingState.Targeted when CurrentNodeState is NodeState.InReach:
-                baseColor = ColorUtility.NegativeMultiplyBlend(idleColor, legalColor, 0.5f);
+                baseColor = ColorUtility.NegativeMultiplyBlend(baseColor, legalColor, 0.8f);
                 break;
             case TargetingState.Targeted when CurrentNodeState is NodeState.OutOfReach:
-                baseColor = ColorUtility.MultiplyBlend(idleColor, illegalColor, 0.5f);
+                baseColor = ColorUtility.MultiplyBlend(baseColor, illegalColor, 0.9f);
                 break;
         }
         
         visual.material.color = baseColor;
     }
 
+    #region Debug
     [Button]
-    private void StartPrev()
+    private void ToggleReachability()
     {
-        PreviewingOutOfReach = true;
+        CurrentNodeState = CurrentNodeState switch
+        {
+            NodeState.InReach => NodeState.OutOfReach,
+            NodeState.OutOfReach => NodeState.InReach,
+            _ => CurrentNodeState
+        };
     }
     
     [Button]
-    private void StopPrev()
+    private void CycleHighlighting()
     {
-        PreviewingOutOfReach = false;
+        switch (CurrentTargetingState)
+        {
+            case TargetingState.Idle:
+                CurrentTargetingState = TargetingState.Hovered;
+                break;
+            case TargetingState.Hovered:
+                CurrentTargetingState = TargetingState.Targeted;
+                break;
+            case TargetingState.Targeted:
+                CurrentTargetingState = TargetingState.Idle;
+                break;
+        }
     }
+    
+    [Button]
+    private void TogglePrev()
+    {
+        PreviewingOutOfReach = !PreviewingOutOfReach;
+    }
+    #endregion
+    
     
     private IEnumerator PreviewOutOfReach()
     {
