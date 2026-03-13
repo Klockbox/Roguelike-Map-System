@@ -14,7 +14,7 @@ public class Node : MonoBehaviour, IClickableObject
     public static List<Node> s_ExitNodes = new List<Node>();
     
     public static event Action<Node> NodeClicked;
-    public static event Action<Node> NodeHoverChanged;
+    public static event Action<Node> AnyNodeHoverChanged;
     #endregion
     
     //###############| instanced class behavior |###############
@@ -22,13 +22,30 @@ public class Node : MonoBehaviour, IClickableObject
     [SerializeField]
     private MeshRenderer visual;
     
-    
     public bool IsExit;
     
     [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToReach { get; private set; } = int.MaxValue;
     [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToLeave { get; private set; } = int.MaxValue;
     public int TotalCost => CostToLeave + CostToReach;
 
+    
+    
+    // Node State Info
+    #region NodeState
+    public event Action NodeStateChanged;
+    
+    [field: SerializeField, ReadOnly, BoxGroup("Info")]
+    private bool _hovered;
+    public bool Hovered
+    {
+        get => _hovered;
+        private set
+        {
+            _hovered = value;
+            NodeStateChanged?.Invoke();
+        }
+    }
+    
     [field: SerializeField, ReadOnly, BoxGroup("Info")]
     private NodeState _currentNodeState = NodeState.InReach;
     public NodeState CurrentNodeState
@@ -37,19 +54,31 @@ public class Node : MonoBehaviour, IClickableObject
         private set
         {
             _currentNodeState = value;
-            UpdateBaseColor();
+            NodeStateChanged?.Invoke();
         } 
     }
     
     [field: SerializeField, ReadOnly, BoxGroup("Info")]
-    private TargetingState currentTargetingState = TargetingState.Idle;
-    public TargetingState CurrentTargetingState
+    private RoutingState _currentRoutingState = RoutingState.NotOnRoute;
+    public RoutingState CurrentRoutingState
     {
-        get => currentTargetingState;
+        get => _currentRoutingState;
         set
         {
-            currentTargetingState = value;
-            UpdateBaseColor();
+            _currentRoutingState = value;
+            NodeStateChanged?.Invoke();
+        } 
+    }
+    
+    [field: SerializeField, ReadOnly, BoxGroup("Info")]
+    private TargetState _currentTargetState = TargetState.NotTargeted;
+    public TargetState CurrentTargetState
+    {
+        get => _currentTargetState;
+        set
+        {
+            _currentTargetState = value;
+            NodeStateChanged?.Invoke();
         } 
     }
 
@@ -60,22 +89,17 @@ public class Node : MonoBehaviour, IClickableObject
         set
         {
             _previewingOutOfReach = value;
-            if(_previewingOutOfReach)
-                StartCoroutine(PreviewOutOfReach()); // it stops in itself when bool is false
+            NodeStateChanged?.Invoke();
         } 
     }
-
-    private Color idleColor;
-    private Color baseColor;
-    [SerializeField] private Color outOfReachColor;
-    [SerializeField] private Color legalColor;
-    [SerializeField] private Color illegalColor;
+    #endregion
     
-    private void Awake()
+    public int PreviewCost { get; private set; }
+    public void UpdatePreviewCost(int cost = 0)
     {
-        idleColor = visual.material.color;
+        PreviewCost = cost;
     }
-
+    
     private void OnEnable()
     {
         s_Nodes.Add(this);
@@ -104,34 +128,6 @@ public class Node : MonoBehaviour, IClickableObject
         }
     }
     
-    private void UpdateBaseColor()
-    {
-        baseColor = CurrentNodeState switch
-        {
-            NodeState.InReach => idleColor,
-            NodeState.OutOfReach => outOfReachColor,
-            _ => baseColor
-        };
-
-        switch (CurrentTargetingState)
-        {
-            case TargetingState.Hovered when CurrentNodeState is NodeState.InReach:
-                baseColor = ColorUtility.NegativeMultiplyBlend(baseColor, legalColor, 0.4f);
-                break;
-            case TargetingState.Hovered when CurrentNodeState is NodeState.OutOfReach:
-                baseColor = ColorUtility.MultiplyBlend(baseColor, illegalColor, 0.6f);
-                break;
-            case TargetingState.Targeted when CurrentNodeState is NodeState.InReach:
-                baseColor = ColorUtility.NegativeMultiplyBlend(baseColor, legalColor, 0.8f);
-                break;
-            case TargetingState.Targeted when CurrentNodeState is NodeState.OutOfReach:
-                baseColor = ColorUtility.MultiplyBlend(baseColor, illegalColor, 0.9f);
-                break;
-        }
-        
-        visual.material.color = baseColor;
-    }
-
     #region Debug
     [Button]
     private void ToggleReachability()
@@ -145,45 +141,42 @@ public class Node : MonoBehaviour, IClickableObject
     }
     
     [Button]
-    private void CycleHighlighting()
+    private void ToggleMarking()
     {
-        switch (CurrentTargetingState)
+        switch (CurrentRoutingState)
         {
-            case TargetingState.Idle:
-                CurrentTargetingState = TargetingState.Hovered;
+            case RoutingState.NotOnRoute:
+                CurrentRoutingState = RoutingState.Marked;
                 break;
-            case TargetingState.Hovered:
-                CurrentTargetingState = TargetingState.Targeted;
-                break;
-            case TargetingState.Targeted:
-                CurrentTargetingState = TargetingState.Idle;
+            case RoutingState.Marked:
+                CurrentRoutingState = RoutingState.NotOnRoute;
                 break;
         }
     }
     
     [Button]
-    private void TogglePrev()
+    private void CycleTargeting()
+    {
+        switch (CurrentTargetState)
+        {
+            case TargetState.NotTargeted:
+                CurrentTargetState = TargetState.RouteEnd;
+                break;
+            case TargetState.RouteEnd:
+                CurrentTargetState = TargetState.Targeted;
+                break;
+            case TargetState.Targeted:
+                CurrentTargetState = TargetState.NotTargeted;
+                break;
+        }
+    }
+    
+    [Button]
+    private void ToggleOutOfReachPreview()
     {
         PreviewingOutOfReach = !PreviewingOutOfReach;
     }
     #endregion
-    
-    
-    private IEnumerator PreviewOutOfReach()
-    {
-        float timer = 0;
-        
-        while (_previewingOutOfReach)
-        {
-            timer += Time.deltaTime * 4;
-            float delta = (Mathf.Sin(timer) + 1) / 2;
-            delta *= 0.5f;
-            visual.material.color = ColorUtility.MultiplyBlend(baseColor, illegalColor, delta);
-            yield return null;
-        }
-
-        visual.material.color = baseColor;
-    }
     
     public void OnPointerUpAsClick()
     {
@@ -193,12 +186,14 @@ public class Node : MonoBehaviour, IClickableObject
 
     public void OnHoverStart()
     {
-        NodeHoverChanged?.Invoke(this);
+        Hovered = true;
+        AnyNodeHoverChanged?.Invoke(this);
     }
 
     public void OnHoverEnd()
     {
-        NodeHoverChanged?.Invoke(null);
+        Hovered = false;
+        AnyNodeHoverChanged?.Invoke(null);
     }
     
     private void OnDrawGizmos()
@@ -231,9 +226,15 @@ public enum NodeState : byte
     OutOfReach
 }
 
-public enum TargetingState : byte
+public enum RoutingState : byte
 {
-    Idle,
-    Hovered,
+    NotOnRoute,
+    Marked
+}
+
+public enum TargetState : byte
+{
+    NotTargeted,
+    RouteEnd,
     Targeted
 }

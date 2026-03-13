@@ -33,15 +33,23 @@ public class ConnectorVisuals : MonoBehaviour
             default:
             case HighlightState.Idle:
                 connectionMeshRenderer.material.color = baseColor;
+                costText.color = new Color(0.75f, 0.75f, 0.75f, 1);
+                costText.fontStyle = FontStyles.Normal;
                 costText.fontSize = 0.3f;
                 break;
             case HighlightState.Hovered:
                 connectionMeshRenderer.material.color = ColorUtility.NegativeMultiplyBlend(baseColor, HighlightColor, 0.3f);
-                costText.fontSize = 0.5f;
+                
+                costText.color = Color.white;
+                costText.fontSize = 0.35f;
+                costText.fontStyle = FontStyles.Bold;
                 break;
             case HighlightState.Targeted:
                 connectionMeshRenderer.material.color = HighlightColor;
-                costText.fontSize = 0.5f;
+                costText.color = Color.white;
+                costText.fontSize = 0.35f;
+                costText.fontStyle = FontStyles.Bold;
+                
                 break;
         }
     }

@@ -7,6 +7,7 @@ public class ConnectionMeshGenerator : MonoBehaviour
     [SerializeField]
     private int segments = 5;
 
+    [SerializeField] private float connectorWidth = 0.075f;
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
     private Vector3 Origin => transform.position;
@@ -22,8 +23,8 @@ public class ConnectionMeshGenerator : MonoBehaviour
         // set up some values
         Vector3 span = endNodeWorldPos - startNodeWorldPos;
         Vector3 direction = span.normalized;
-        Vector3 rightOffset = Quaternion.FromToRotation(Vector3.forward, direction) * (Vector3.right * 0.1f);
-        Vector3 leftOffset = Quaternion.FromToRotation(Vector3.forward, direction) * (Vector3.left * 0.1f);
+        Vector3 rightOffset = Quaternion.FromToRotation(Vector3.forward, direction) * (Vector3.right * (connectorWidth / 2));
+        Vector3 leftOffset = Quaternion.FromToRotation(Vector3.forward, direction) * (Vector3.left * (connectorWidth / 2));
         Vector3 start = startNodeWorldPos - Origin;
         
         // generate verts
@@ -87,5 +88,11 @@ public static class ColorUtility
     {
         Color fullNegMult = new ( origColor.r * overlay.r, origColor.g * overlay.g, origColor.b * overlay.b);
         return Color.Lerp(origColor, fullNegMult, percent);
+    }
+
+    public static Color SimpleGrayConversion(Color origColor, float percent = 1)
+    {
+        float avg = (origColor.r + origColor.g + origColor.b) / 3;
+        return new Color(avg, avg, avg, 1);
     }
 }

@@ -424,3 +424,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   segments: 5
+  connectorWidth: 0.075

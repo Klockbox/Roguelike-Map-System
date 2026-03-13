@@ -36,10 +36,15 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         return !PlayerMini.IsMoving;
     }
     
+    private bool CurrentlyAllowingPreview()
+    {
+        return !PlayerMini.IsMoving;
+    }
+    
     private void OnEnable()
     {
         Node.NodeClicked += OnNodeClicked;
-        Node.NodeHoverChanged += OnHoveringChanged;
+        Node.AnyNodeHoverChanged += OnHoveringChanged;
         
         PlayerMini.PlayerStartedMove += OnPlayerStartMoving;
         PlayerMini.PlayerReachedNode += OnPlayerReachedNode;
@@ -50,7 +55,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     private void OnDisable()
     {
         Node.NodeClicked -= OnNodeClicked;
-        Node.NodeHoverChanged -= OnHoveringChanged;
+        Node.AnyNodeHoverChanged -= OnHoveringChanged;
         
         PlayerMini.PlayerStartedMove -= OnPlayerStartMoving;
         PlayerMini.PlayerReachedNode -= OnPlayerReachedNode;
@@ -78,7 +83,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 
     private void OnPlayerReachedNode(Node node)
     {
-        
+        UpdateHoverPreview();
     }
     
     private static Dictionary<Node, Waypoint> CalculateDijkstra(Node startingNode)
@@ -146,7 +151,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     private void UpdateHoverPreview()
     {
         EndHoverPreview();
-        if (HoveredNode && HoveredNode != PlayerNode)
+        if (HoveredNode && HoveredNode != PlayerNode && CurrentlyAllowingPreview())
             EvaluateHoveredNode();
         
         MovePreviewChanged?.Invoke(TargetMoveCost);
@@ -165,6 +170,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
             && connectorToNeighbor.MoveCost <= CurrentFuel // can I cover the direct movement cost?
             && connectorToNeighbor.MoveCost + HoveredNode.CostToLeave <= CurrentFuel; // can you still leave from there?
 
+        // construct route
         List<Waypoint> route = new List<Waypoint>();
         if (canMoveDirectlyToHoveredNode)
         {
@@ -187,12 +193,17 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
             route.Reverse(); // sort it that neighbor target is [0]
         }
         
-        
-        
-        for (int i = 0; i < route.Count; i++)
+        // evaluate nodes on route
+        Node furthestLegalTarget = null;
+
+        for (int i = route.Count - 1; i >= 0; i--)
         {
-            Node evaluatedNode = route[i].Node;
-            Node precedingNode = route[i].PreviousNode;
+            Waypoint evaluatedWaypoint = route[i];
+            Node evaluatedNode = evaluatedWaypoint.Node;
+            Node precedingNode = evaluatedWaypoint.PreviousNode;
+
+            // mark all nodes along route
+            evaluatedNode.CurrentRoutingState = RoutingState.Marked;
             
             if (i == 0)
             {
@@ -201,24 +212,33 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
                 TargetedNode = evaluatedNode;
                 TargetMoveCost = targetConnector.MoveCost;
                 LegalMove = TargetMoveCost + TargetedNode.CostToLeave <= CurrentFuel;
+                
+                // send move cost to node.
+                TargetedNode.UpdatePreviewCost(TargetMoveCost);
         
                 //highlight connectors and nodes
-                TargetedNode.CurrentTargetingState = TargetingState.Targeted;
+                TargetedNode.CurrentTargetState = TargetState.Targeted;
                 targetConnector.HighlightState = HighlightState.Targeted;
                 
                 continue;
             }
+
+            // determine legal route end and mark it
+            if (!furthestLegalTarget && evaluatedWaypoint.LowestMoveCost + evaluatedNode.CostToLeave <= CurrentFuel)
+            {
+                furthestLegalTarget = evaluatedNode;
+                furthestLegalTarget.UpdatePreviewCost(evaluatedWaypoint.LowestMoveCost);
+                evaluatedNode.CurrentTargetState = TargetState.RouteEnd;
+            }
             
-            //hovered
-            evaluatedNode.CurrentTargetingState = TargetingState.Hovered;
             if (Connector.TryGetConnector(evaluatedNode, precedingNode, out Connector connector))
                 connector.HighlightState = HighlightState.Hovered;
         }
         
-        
         // out of reach preview
-        // find furthest legal target
-        Node furthestLegalTarget = null;
+        // find the furthest legal target
+        
+        
         // I think, I have to track this separately because otherwise it would use optimal values,
         // which might get thrown off, when using neighbor override
         int costToFurthestLegalTarget = 0; 
@@ -249,16 +269,15 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 
         foreach (Node node in Node.s_Nodes)
         {
-            node.CurrentTargetingState = TargetingState.Idle;
+            node.CurrentRoutingState = RoutingState.NotOnRoute;
+            node.CurrentTargetState = TargetState.NotTargeted;
             node.PreviewingOutOfReach = false;
+            node.UpdatePreviewCost();
         }
-            
         
         foreach (Connector connector in Connector.s_Connectors)
             connector.HighlightState = HighlightState.Idle;
     }
-    
-    
     
     private void OnNodeClicked(Node clickedNode)
     {
