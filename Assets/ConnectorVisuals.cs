@@ -31,15 +31,15 @@ public class ConnectorVisuals : MonoBehaviour
         switch (state)
         {
             default:
-            case HighlightState.NotHighlighted:
+            case HighlightState.Idle:
                 connectionMeshRenderer.material.color = baseColor;
                 costText.fontSize = 0.3f;
                 break;
-            case HighlightState.LightlyHighlighted:
+            case HighlightState.Hovered:
                 connectionMeshRenderer.material.color = ColorUtility.NegativeMultiplyBlend(baseColor, HighlightColor, 0.3f);
                 costText.fontSize = 0.5f;
                 break;
-            case HighlightState.Highlighted:
+            case HighlightState.Targeted:
                 connectionMeshRenderer.material.color = HighlightColor;
                 costText.fontSize = 0.5f;
                 break;

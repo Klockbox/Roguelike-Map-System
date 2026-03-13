@@ -36,7 +36,7 @@ public class Connector : MonoBehaviour
     private bool IsValid => Node1 && Node2 && Node1 != Node2;
 
     [SerializeField, ReadOnly]
-    private HighlightState _highlightState = HighlightState.NotHighlighted;
+    private HighlightState _highlightState = HighlightState.Idle;
     public HighlightState HighlightState
     {
         get => _highlightState;
@@ -99,9 +99,9 @@ public class Connector : MonoBehaviour
     {
         HighlightState = HighlightState switch
         {
-            HighlightState.NotHighlighted => HighlightState.LightlyHighlighted,
-            HighlightState.LightlyHighlighted => HighlightState.Highlighted,
-            HighlightState.Highlighted => HighlightState.NotHighlighted,
+            HighlightState.Idle => HighlightState.Hovered,
+            HighlightState.Hovered => HighlightState.Targeted,
+            HighlightState.Targeted => HighlightState.Idle,
             _ => throw new ArgumentOutOfRangeException()
         };
     }
@@ -116,7 +116,7 @@ public class Connector : MonoBehaviour
 
 public enum HighlightState : byte
 {
-    NotHighlighted,
-    LightlyHighlighted,
-    Highlighted,
+    Idle,
+    Hovered,
+    Targeted,
 }
