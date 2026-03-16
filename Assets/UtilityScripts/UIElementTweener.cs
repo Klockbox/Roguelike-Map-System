@@ -70,6 +70,12 @@ public class UIElementTweener : MonoBehaviour
         StartCoroutine(PlayTween());
     }
 
+    public void Close(Action callback = null)
+    {
+        IsActive = false;
+        StartCoroutine(PlayTween(callback));
+    }
+
     private IEnumerator PlayTween(Action callback = null)
     {
         IsMoving = true;
@@ -84,9 +90,16 @@ public class UIElementTweener : MonoBehaviour
             yield return StartCoroutine(useCustomEaseMoveOut ? 
                 Move(activeTransform,differingEndPosition ? endTransform : beginTransform, customEaseMoveOut, easeOutDuration) : 
                 Move(activeTransform, differingEndPosition ? endTransform : beginTransform, easeMoveOut, easeOutDuration));
-            if(destroyOnExit)
-                Destroy(gameObject);
+            
+            
         }
+        
+        IsMoving = false;
+        
+        callback?.Invoke();
+        
+        if(!IsActive && destroyOnExit)
+            Destroy(gameObject);
     }
     
 
@@ -94,13 +107,12 @@ public class UIElementTweener : MonoBehaviour
     {
         SetRectTransformToData(RectTransform, start);
         yield return RectTransform.DOAnchorPos3D(target.AnchoredPosition3D, duration).SetEase(ease).WaitForCompletion();
-        IsMoving = false;
+        
     }
     private IEnumerator Move(RectTransformData start, RectTransformData target, AnimationCurve ease, float duration)
     {
         SetRectTransformToData(RectTransform, start);
         yield return RectTransform.DOAnchorPos3D(target.AnchoredPosition3D, duration).SetEase(ease).WaitForCompletion();
-        IsMoving = false;
     }
 
     

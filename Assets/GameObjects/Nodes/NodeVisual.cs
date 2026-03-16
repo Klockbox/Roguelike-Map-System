@@ -12,6 +12,8 @@ public class NodeVisual : MonoBehaviour
     [SerializeField]
     private Transform meshOrigin;
     [SerializeField]
+    private Transform meshTransform;
+    [SerializeField]
     private MeshRenderer meshRenderer;
     [SerializeField]
     private TMP_Text costPreviewText;
@@ -31,10 +33,21 @@ public class NodeVisual : MonoBehaviour
 
     private void OnNodeStateChanged()
     {
+        UpdateDimensions();
         UpdateBaseColor();
+        UpdateCostPreviewDisplay();
         
         if (node.PreviewingOutOfReach)
             StartCoroutine(PreviewOutOfReach());
+    }
+
+    private void UpdateDimensions()
+    {
+        meshOrigin.localScale = node.Visited switch
+        {
+            true => new Vector3(1, 0.2f, 1),
+            false => new Vector3(1, 1, 1)
+        };
     }
 
     private void UpdateBaseColor()
@@ -52,7 +65,7 @@ public class NodeVisual : MonoBehaviour
             
             onHoverTween?.Complete();
             onHoverTween = DOTween.Sequence();
-            onHoverTween.Append(meshOrigin.transform.DOPunchScale(Vector3.one * 0.05f, 0.5f)).OnComplete(() => onHoverTween = null);
+            onHoverTween.Append(meshTransform.transform.DOPunchScale(Vector3.one * 0.05f, 0.5f)).OnComplete(() => onHoverTween = null);
         }
         
         if (node.CurrentRoutingState is RoutingState.Marked)
@@ -65,31 +78,20 @@ public class NodeVisual : MonoBehaviour
             };
         }
         
-        //update cost preview
-        costPreviewText.text = $"- {node.PreviewCost} fuel";
-        
         switch (node.CurrentTargetState)
         {
             default:
             case TargetState.NotTargeted:
-                meshOrigin.localScale = Vector3.one;
-                costPreviewText.enabled = false;
                 break;
             case TargetState.RouteEnd:
-                costPreviewText.enabled = true;
-                costPreviewText.transform.localScale = Vector3.one;
-                meshOrigin.localScale = Vector3.one * 1.2f;
+                meshOrigin.localScale = meshOrigin.transform.localScale * 1.1f;
                 break;
             case TargetState.Targeted:
-                costPreviewText.enabled = true;
-                costPreviewText.transform.localScale = Vector3.one * 1.2f;
-                meshOrigin.localScale = Vector3.one * 1.5f;
+                meshOrigin.localScale = meshOrigin.transform.localScale * 1.2f;
                 break;
         }
         
         meshRenderer.material.color = baseColor;
-
-        UpdateCostPreviewDisplay();
     }
 
     private void UpdateCostPreviewDisplay()

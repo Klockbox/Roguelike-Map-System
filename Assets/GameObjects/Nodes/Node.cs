@@ -24,15 +24,28 @@ public class Node : MonoBehaviour, IClickableObject
     
     public bool IsExit;
     
+    
     [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToReach { get; private set; } = int.MaxValue;
     [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToLeave { get; private set; } = int.MaxValue;
     public int TotalCost => CostToLeave + CostToReach;
 
-    
+    public MapEncounter MapEncounter;
     
     // Node State Info
     #region NodeState
     public event Action NodeStateChanged;
+
+    [field: SerializeField, ReadOnly, BoxGroup("Info")]
+    private bool _visited = false;
+    public bool Visited 
+    {
+        get => _visited;
+        set
+        {
+            _visited = value;
+            NodeStateChanged?.Invoke();
+        }
+    }
     
     [field: SerializeField, ReadOnly, BoxGroup("Info")]
     private bool _hovered;
@@ -118,14 +131,13 @@ public class Node : MonoBehaviour, IClickableObject
         {
             case ECostType.CostToReach:
                 CostToReach = newCost;
-                CurrentNodeState = TotalCost <= MapManager.Instance.CurrentFuel ? NodeState.InReach : NodeState.OutOfReach;
                 break;
             case ECostType.CostToLeave:
                 CostToLeave = newCost;
                 break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
+        
+        CurrentNodeState = TotalCost <= MapManager.Instance.CurrentFuel ? NodeState.InReach : NodeState.OutOfReach;
     }
     
     #region Debug
@@ -207,7 +219,7 @@ public class Node : MonoBehaviour, IClickableObject
         
         Handles.Label(transform.position, labelText, EditorStyles.label);
     }
-
+    
     #region UnusedInterface
     public void OnPointerDown() { }
     public void OnPointerHold() { }
@@ -216,6 +228,7 @@ public class Node : MonoBehaviour, IClickableObject
     public void OnDrag(Vector2 pointerPos) { }
     public void OnDragEnd(Vector2 pointerPos) { }
     public bool IsDraggable() => true;
+
     #endregion
     
 }

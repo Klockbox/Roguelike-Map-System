@@ -50,7 +50,7 @@ public class Connector : MonoBehaviour
 
     private void Awake()
     {
-        MoveCost = Random.Range(1, 7);
+        MoveCost = Random.Range(1, 4);
         visuals?.SetCostText(MoveCost);
     }
     private void OnEnable() { s_Connectors.Add(this); }
@@ -64,8 +64,14 @@ public class Connector : MonoBehaviour
     private void Start()
     {
         UpdateSetUp();
+        meshGenerator?.GenerateMesh(Node1.transform.position, Node2.transform.position);
     }
-    
+
+    private void OnValidate()
+    {
+        UpdateSetUp();
+    }
+
     /// <summary>Check if the connector is connecting the given <see cref="Node"/>.</summary>
     public bool Connects(Node node) => Node1 == node || Node2 == node; // does this node connect the given node to anything?
 
@@ -88,10 +94,6 @@ public class Connector : MonoBehaviour
         
         transform.position = Node1.transform.position + (Node2.transform.position - Node1.transform.position) / 2;
         name = $"Connector: {Node1.name} - {Node2.name} @ {MoveCost}";
-        
-        if(!Application.isPlaying) return;
-        
-        meshGenerator?.GenerateMesh(Node1.transform.position, Node2.transform.position);
     }
     
     [Button]

@@ -411,6 +411,8 @@ MonoBehaviour:
   IsExit: 0
   <CostToReach>k__BackingField: 0
   <CostToLeave>k__BackingField: 0
+  MapEncounter: {fileID: 0}
+  _visited: 0
   _hovered: 0
   _currentNodeState: 0
   _currentRoutingState: 0
@@ -429,6 +431,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   node: {fileID: 3986626873733495567}
   meshOrigin: {fileID: 6038719729708536877}
+  meshTransform: {fileID: 6499721638241764867}
   meshRenderer: {fileID: 3203707192244810532}
   costPreviewText: {fileID: 8604849061518261037}
   illegalColor: {r: 1, g: 0, b: 0, a: 1}
@@ -517,7 +520,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7537895126810109867}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
@@ -530,7 +533,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '- 25 fuel'
+  m_text: '- XX fuel'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 79459efec17a4d00a321bdcc27bbc385, type: 2}

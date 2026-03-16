@@ -3,27 +3,57 @@ using System.Collections.Generic;
 using System.Linq;
 using NaughtyAttributes;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
 public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 {
     [SerializeField] private PlayerMini playerMini;
-    [field: SerializeField] public Node PlayerNode { get; private set; }
-    [field: SerializeField, ReadOnly] public Node HoveredNode { get; private set; }
-    [field: SerializeField, ReadOnly, BoxGroup("Move Preview")] public Node TargetedNode { get; private set; }
-    [field: SerializeField, ReadOnly, BoxGroup("Move Preview")] public bool LegalMove { get; private set; }
-    [field: SerializeField, ReadOnly, BoxGroup("Move Preview")] public int TargetMoveCost { get; private set; }
+
+    [BoxGroup("Game State")] 
+    private MapState _currentMapState = MapState.Travel;
+    public MapState CurrentMapState
+    {
+        get => _currentMapState;
+        set
+        {
+            _currentMapState = value;
+            UpdateHoverPreview();
+        }
+    }
+
+    [field: SerializeField, BoxGroup("Move")]
+    private Node _playerNode;
+
+    public Node PlayerNode
+    {
+        get => _playerNode;
+        set
+        {
+            _playerNode = value;
+            CalculateCostsToReach();
+        }
+    }
+    
+    
+    [field: SerializeField, ReadOnly, BoxGroup("Move")] public Node HoveredNode { get; private set; }
+    [field: SerializeField, ReadOnly, BoxGroup("Move")] public Node TargetedNode { get; private set; }
+    [field: SerializeField, ReadOnly, BoxGroup("Move")] public bool LegalMove { get; private set; }
+    [field: SerializeField, ReadOnly, BoxGroup("Move")] public int TargetMoveCost { get; private set; }
     public static event Action<int> OnFuelChanged;
     public static event Action<int> MovePreviewChanged;
+
+    
     
     [SerializeField, BoxGroup("Fuel")] private int startingFuel;
     [SerializeField, ReadOnly, BoxGroup("Fuel")] private int currentFuel;
     public int CurrentFuel
     {
         get => currentFuel;
-        private set
+        set
         {
             currentFuel = value;
+            CalculateCostsToReach();
             OnFuelChanged?.Invoke(currentFuel);
         }
     }
@@ -38,7 +68,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     
     private bool CurrentlyAllowingPreview()
     {
-        return !PlayerMini.IsMoving;
+        return !PlayerMini.IsMoving && CurrentMapState is MapState.Travel;
     }
     
     private void OnEnable()
@@ -60,31 +90,41 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         PlayerMini.PlayerStartedMove -= OnPlayerStartMoving;
         PlayerMini.PlayerReachedNode -= OnPlayerReachedNode;
     }
-    
 
-    protected override void Awake()
+    [Button]
+    public void ReloadMapScene()
     {
-        base.Awake();
-        CurrentFuel = startingFuel;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
+    
 
     private void Start()
     {
+        CurrentFuel = startingFuel;
+        PlayerNode.Visited = true;
         playerMini.SetToNode(PlayerNode);
         CalculateCostsToLeave();
-        CalculateCostsToReach();
     }
 
     private void OnPlayerStartMoving()
     {
-        CalculateCostsToReach();
         UpdateHoverPreview();
     }
 
     private void OnPlayerReachedNode(Node node)
     {
+        if (node.Visited)
+        {
+            // do nothing ?
+        }
+        else
+        {
+            node.Visited = true;
+            EncounterManager.Instance.StartEncounter(node.MapEncounter);
+        }
         UpdateHoverPreview();
     }
+
     
     private static Dictionary<Node, Waypoint> CalculateDijkstra(Node startingNode)
     {
@@ -312,4 +352,10 @@ public enum ECostType
 {
     CostToReach,
     CostToLeave
+}
+
+public enum MapState
+{
+    Travel,
+    Encounter
 }
