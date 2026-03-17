@@ -84,6 +84,7 @@ public class Connector : MonoBehaviour
         return null;
     }
 
+    [Button]
     private void UpdateSetUp()
     {
         if (!IsValid)

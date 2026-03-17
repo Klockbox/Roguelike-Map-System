@@ -4,13 +4,12 @@ using System.Linq;
 using NaughtyAttributes;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Random = UnityEngine.Random;
 
 public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 {
     [SerializeField] private PlayerMini playerMini;
 
-    [BoxGroup("Game State")] 
+    [SerializeField, ReadOnly, BoxGroup("Game State")] 
     private MapState _currentMapState = MapState.Travel;
     public MapState CurrentMapState
     {
@@ -22,9 +21,34 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         }
     }
 
-    [field: SerializeField, BoxGroup("Move")]
-    private Node _playerNode;
+    [SerializeField, ReadOnly, BoxGroup("Game State")]
+    private int _pointScore;
+    public int PointScore
+    {
+        get => _pointScore;
+        set
+        {
+            _pointScore = value;
+            PointScoreChanged?.Invoke(_pointScore);
+        } 
+    }
+    public static event Action<int> PointScoreChanged;
+    
+    [SerializeField, ReadOnly, BoxGroup("Game State")]
+    private int _money;
+    public int Money
+    {
+        get => _money;
+        set
+        {
+            _money = value;
+            MoneyChanged?.Invoke(_money);
+        } 
+    }
+    public static event Action<int> MoneyChanged;
 
+    [SerializeField, BoxGroup("Move")]
+    private Node _playerNode;
     public Node PlayerNode
     {
         get => _playerNode;
@@ -34,7 +58,6 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
             CalculateCostsToReach();
         }
     }
-    
     
     [field: SerializeField, ReadOnly, BoxGroup("Move")] public Node HoveredNode { get; private set; }
     [field: SerializeField, ReadOnly, BoxGroup("Move")] public Node TargetedNode { get; private set; }
@@ -101,6 +124,8 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     private void Start()
     {
         CurrentFuel = startingFuel;
+        Money = 0;
+        PointScore = 0;
         PlayerNode.Visited = true;
         playerMini.SetToNode(PlayerNode);
         CalculateCostsToLeave();
@@ -120,7 +145,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         else
         {
             node.Visited = true;
-            EncounterManager.Instance.StartEncounter(node.MapEncounter);
+            EncounterManager.Instance.StartEncounter(node.GetEncounter());
         }
         UpdateHoverPreview();
     }
@@ -323,7 +348,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     {
         if (!LegalMove
             || !CurrentlyAcceptingInput()
-            || !Connector.TryGetConnector(PlayerNode, TargetedNode, out Connector connector))
+            || !Connector.TryGetConnector(PlayerNode, TargetedNode, out Connector _))
         {
             return;
         } 

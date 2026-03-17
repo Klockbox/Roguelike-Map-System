@@ -9,7 +9,7 @@ public class MapEncounter : MonoBehaviour
     private UIElementTweener tweener;
     public bool IsClosing => tweener.IsMoving;
     
-    private void Awake()
+    private protected virtual void Awake()
     {
         tweener = GetComponent<UIElementTweener>();
     }

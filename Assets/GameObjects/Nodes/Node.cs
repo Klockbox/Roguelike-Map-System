@@ -28,8 +28,9 @@ public class Node : MonoBehaviour, IClickableObject
     [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToReach { get; private set; } = int.MaxValue;
     [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToLeave { get; private set; } = int.MaxValue;
     public int TotalCost => CostToLeave + CostToReach;
-
-    public MapEncounter MapEncounter;
+    
+    // relay
+    public MapEncounter GetEncounter() { return GetComponent<IEncounterNode>()?.GetEncounter(); }
     
     // Node State Info
     #region NodeState
