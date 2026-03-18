@@ -18,9 +18,6 @@ public class NodeVisual : MonoBehaviour
     [SerializeField]
     private MeshRenderer meshRenderer;
     
-    [SerializeField] private TMP_Text consumptionText;
-    [SerializeField] private Canvas costPreviewCanvas;
-    
     [Header("Options")]
     private Color idleColor;
     private Color baseColor;
@@ -70,7 +67,6 @@ public class NodeVisual : MonoBehaviour
     {
         UpdateDimensions();
         UpdateBaseColor();
-        UpdateCostPreviewDisplay();
         
         if (node.PreviewingOutOfReach)
             StartCoroutine(PreviewOutOfReach());
@@ -142,30 +138,6 @@ public class NodeVisual : MonoBehaviour
             scaleOffset_Visited.z * scaleOffset_HoverFeedback.z * scaleOffset_TargetState.z * scaleOffset_IsNeighbor.z * scaleOffset_IsNeighborTween.z
         );
     }
-
-    private void UpdateCostPreviewDisplay()
-    {
-        if(!costPreviewCanvas || !consumptionText) return;
-        
-        //update cost preview
-        consumptionText.text = $"{node.PreviewCost}";
-
-        if (node.CurrentNodeState is NodeState.OutOfReach)
-        {
-            consumptionText.enabled = false;
-            return;
-        }
-        
-        
-        
-        costPreviewCanvas.gameObject.SetActive(node.CurrentTargetState is not TargetState.NotTargeted);
-        costPreviewCanvas.transform.localScale = node.CurrentTargetState switch
-        {
-            TargetState.Targeted => Vector3.one * 1.2f,
-            _ => Vector3.one
-        };
-    }
-    
     
     
     private IEnumerator PreviewOutOfReach()
