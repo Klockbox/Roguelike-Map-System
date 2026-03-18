@@ -50,8 +50,24 @@ public class Connector : MonoBehaviour
 
     private void Awake()
     {
-        MoveCost = Random.Range(1, 4);
-        visuals?.SetCostText(MoveCost);
+        int d6 = Random.Range(1, 7);
+
+        switch (d6)
+        {
+            default:
+                MoveCost = 1;
+                break;
+            case 4:
+            case 5:
+                MoveCost = 2;
+                break;
+            case 6:
+                MoveCost = 3;
+                break;
+        }
+        
+        
+        visuals?.SetUp(MoveCost);
     }
     private void OnEnable() { s_Connectors.Add(this); }
     private void OnDisable() { s_Connectors.Remove(this); }
@@ -102,8 +118,8 @@ public class Connector : MonoBehaviour
     {
         HighlightState = HighlightState switch
         {
-            HighlightState.Idle => HighlightState.Hovered,
-            HighlightState.Hovered => HighlightState.Targeted,
+            HighlightState.Idle => HighlightState.Marked,
+            HighlightState.Marked => HighlightState.Targeted,
             HighlightState.Targeted => HighlightState.Idle,
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -120,6 +136,6 @@ public class Connector : MonoBehaviour
 public enum HighlightState : byte
 {
     Idle,
-    Hovered,
+    Marked,
     Targeted,
 }

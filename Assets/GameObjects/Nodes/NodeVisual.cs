@@ -114,10 +114,12 @@ public class NodeVisual : MonoBehaviour
             case TargetState.RouteEnd:
                 costPreviewText.enabled = true;
                 costPreviewText.transform.localScale = Vector3.one;
+                costPreviewText.color = Color.white;
                 break;
             case TargetState.Targeted:
                 costPreviewText.enabled = true;
                 costPreviewText.transform.localScale = Vector3.one * 1.2f;
+                costPreviewText.color = new Color(1, 0.27f, 0.27f, 1);
                 break;
         }
     }

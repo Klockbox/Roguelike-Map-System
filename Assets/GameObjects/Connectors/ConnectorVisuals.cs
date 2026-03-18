@@ -8,8 +8,16 @@ public class ConnectorVisuals : MonoBehaviour
     [Header("References")]
     [SerializeField]
     private MeshRenderer connectionMeshRenderer;
-    [SerializeField]
-    private TMP_Text costText;
+
+    [SerializeField] private Canvas indicatorCanvas;
+    [SerializeField] private ConnectionCostIndicator oneCostPrefab;
+    [SerializeField] private ConnectionCostIndicator extraCostPrefab;
+
+    [SerializeField] private Color oneCostRoadColor;
+    [SerializeField] private Color twoCostRoadColor;
+    [SerializeField] private Color threeCostRoadColor;
+    
+    private ConnectionCostIndicator connectedIndicator;
     
     [Header("Options")]
     private Color baseColor;
@@ -21,35 +29,40 @@ public class ConnectorVisuals : MonoBehaviour
         GetComponent<Connector>().HighlightStateChanged += SetHighlight;  // connector nulls listeners on destroy
     }
 
-    public void SetCostText(int costs)
+    public void SetUp(int cost)
     {
-        costText.text = costs.ToString();
+        connectedIndicator = cost switch
+        {
+            1 => Instantiate(oneCostPrefab, indicatorCanvas.transform),
+            _ => Instantiate(extraCostPrefab, indicatorCanvas.transform)
+        };
+        connectedIndicator.SetCost(cost);
+
+        baseColor = cost switch
+        {
+            2 => twoCostRoadColor,
+            3 => threeCostRoadColor,
+            _ => oneCostRoadColor
+        };
     }
 
     private void SetHighlight(HighlightState state)
     {
+        // notify indicator
+        connectedIndicator.HighlightState = state;
+        
+        // change road color
         switch (state)
         {
             default:
             case HighlightState.Idle:
                 connectionMeshRenderer.material.color = baseColor;
-                costText.color = new Color(0.75f, 0.75f, 0.75f, 1);
-                costText.fontStyle = FontStyles.Normal;
-                costText.fontSize = 0.3f;
                 break;
-            case HighlightState.Hovered:
+            case HighlightState.Marked:
                 connectionMeshRenderer.material.color = ColorUtility.NegativeMultiplyBlend(baseColor, HighlightColor, 0.3f);
-                
-                costText.color = Color.white;
-                costText.fontSize = 0.35f;
-                costText.fontStyle = FontStyles.Bold;
                 break;
             case HighlightState.Targeted:
                 connectionMeshRenderer.material.color = HighlightColor;
-                costText.color = Color.white;
-                costText.fontSize = 0.35f;
-                costText.fontStyle = FontStyles.Bold;
-                
                 break;
         }
     }

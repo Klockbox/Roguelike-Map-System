@@ -297,7 +297,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
             }
             
             if (Connector.TryGetConnector(evaluatedNode, precedingNode, out Connector connector))
-                connector.HighlightState = HighlightState.Hovered;
+                connector.HighlightState = HighlightState.Marked;
         }
         
         // out of reach preview
