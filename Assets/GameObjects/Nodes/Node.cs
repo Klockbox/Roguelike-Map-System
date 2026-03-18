@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using NaughtyAttributes;
 using UnityEditor;
 using UnityEngine;
@@ -22,8 +20,14 @@ public class Node : MonoBehaviour, IClickableObject
     [SerializeField]
     private MeshRenderer visual;
     
-    public bool IsExit;
-    
+    public bool IsExit
+    {
+        get
+        {
+            IEncounterNode encounterNode = GetComponent<IEncounterNode>();
+            return encounterNode != null && encounterNode.IsExit();
+        }
+    }
     
     [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToReach { get; private set; } = int.MaxValue;
     [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToLeave { get; private set; } = int.MaxValue;
@@ -47,6 +51,21 @@ public class Node : MonoBehaviour, IClickableObject
             NodeStateChanged?.Invoke();
         }
     }
+    
+    public event Action NeighboringChanged;
+    [field: SerializeField, ReadOnly, BoxGroup("Info")]
+    private bool _isNeighbor = false;
+    public bool IsNeighbor 
+    {
+        get => _isNeighbor;
+        set
+        {
+            _isNeighbor = value;
+            NeighboringChanged?.Invoke();
+        }
+    }
+
+    
     
     [field: SerializeField, ReadOnly, BoxGroup("Info")]
     private bool _hovered;
@@ -165,6 +184,12 @@ public class Node : MonoBehaviour, IClickableObject
                 CurrentRoutingState = RoutingState.NotOnRoute;
                 break;
         }
+    }
+    
+    [Button]
+    private void ToggleNeighbor()
+    {
+        IsNeighbor = !IsNeighbor;
     }
     
     [Button]

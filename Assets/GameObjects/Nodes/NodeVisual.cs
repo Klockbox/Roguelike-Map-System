@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using DG.Tweening;
+using DG.Tweening.Core;
+using DG.Tweening.Plugins.Options;
 using TMPro;
 using UnityEngine;
 
@@ -15,8 +17,9 @@ public class NodeVisual : MonoBehaviour
     private Transform meshTransform;
     [SerializeField]
     private MeshRenderer meshRenderer;
-    [SerializeField]
-    private TMP_Text costPreviewText;
+    
+    [SerializeField] private TMP_Text consumptionText;
+    [SerializeField] private Canvas costPreviewCanvas;
     
     [Header("Options")]
     private Color idleColor;
@@ -25,10 +28,42 @@ public class NodeVisual : MonoBehaviour
     [SerializeField] private Color highlightColor;
 
     private Sequence onHoverTween;
+    private Sequence neighborTween;
+    
+    [SerializeField] private Vector3 scaleOffset_Visited = Vector3.one;
+    [SerializeField] private Vector3 scaleOffset_HoverFeedback = Vector3.one;
+    [SerializeField] private Vector3 scaleOffset_TargetState = Vector3.one;
+    [SerializeField] private Vector3 scaleOffset_IsNeighbor = Vector3.one;
+    [SerializeField] private Vector3 scaleOffset_IsNeighborTween = Vector3.one;
+    
     private void Awake()
     {
         idleColor = meshRenderer.material.color;
         node.NodeStateChanged += OnNodeStateChanged;
+        node.NeighboringChanged += OnNeighboringChanged;
+    }
+
+    private void OnNeighboringChanged()
+    {
+        neighborTween.Rewind();
+        neighborTween.Kill();
+        switch (node.IsNeighbor)
+        {
+            case true when node.CurrentNodeState == NodeState.InReach:
+                scaleOffset_IsNeighbor = new Vector3(1.4f, 1.4f, 1.4f);
+                neighborTween = DOTween.Sequence().SetLoops(-1, LoopType.Yoyo);
+                neighborTween.Append(
+                    DOTween.To(
+                        () => scaleOffset_IsNeighborTween, 
+                        x => scaleOffset_IsNeighborTween = x, 
+                        new Vector3(1.1f, 1.1f, 1.1f), 
+                        1f
+                        ).SetEase(Ease.InOutQuad));
+                break;
+            default:
+                scaleOffset_IsNeighbor = Vector3.one;
+                break;
+        }
     }
 
     private void OnNodeStateChanged()
@@ -43,11 +78,25 @@ public class NodeVisual : MonoBehaviour
 
     private void UpdateDimensions()
     {
-        meshOrigin.localScale = node.Visited switch
+        scaleOffset_Visited = node.Visited switch
         {
             true => new Vector3(1, 0.2f, 1),
             false => new Vector3(1, 1, 1)
         };
+        
+        switch (node.CurrentTargetState)
+        {
+            default:
+            case TargetState.NotTargeted:
+                scaleOffset_TargetState = Vector3.one;
+                break;
+            case TargetState.RouteEnd:
+                scaleOffset_TargetState = Vector3.one * 1.1f;
+                break;
+            case TargetState.Targeted:
+                scaleOffset_TargetState = Vector3.one * 1.2f;
+                break;
+        }
     }
 
     private void UpdateBaseColor()
@@ -65,7 +114,9 @@ public class NodeVisual : MonoBehaviour
             
             onHoverTween?.Complete();
             onHoverTween = DOTween.Sequence();
-            onHoverTween.Append(meshTransform.transform.DOPunchScale(Vector3.one * 0.05f, 0.5f)).OnComplete(() => onHoverTween = null);
+            //onHoverTween.Append(meshTransform.transform.DOPunchScale(Vector3.one * 0.05f, 0.5f)).OnComplete(() => onHoverTween = null);
+            TweenerCore<Vector3, Vector3[], Vector3ArrayOptions> punchTween = DOTween.Punch(() => scaleOffset_HoverFeedback, x => scaleOffset_HoverFeedback = x, Vector3.one * 0.05f, 0.5f);
+            onHoverTween.Append(punchTween);
         }
         
         if (node.CurrentRoutingState is RoutingState.Marked)
@@ -78,50 +129,41 @@ public class NodeVisual : MonoBehaviour
             };
         }
         
-        switch (node.CurrentTargetState)
-        {
-            default:
-            case TargetState.NotTargeted:
-                break;
-            case TargetState.RouteEnd:
-                meshOrigin.localScale = meshOrigin.transform.localScale * 1.1f;
-                break;
-            case TargetState.Targeted:
-                meshOrigin.localScale = meshOrigin.transform.localScale * 1.2f;
-                break;
-        }
+        
         
         meshRenderer.material.color = baseColor;
     }
 
+    private void Update()
+    {
+        meshOrigin.localScale = new Vector3(
+            scaleOffset_Visited.x * scaleOffset_HoverFeedback.x * scaleOffset_TargetState.x * scaleOffset_IsNeighbor.x * scaleOffset_IsNeighborTween.x,
+            scaleOffset_Visited.y * scaleOffset_HoverFeedback.y * scaleOffset_TargetState.y * scaleOffset_IsNeighbor.y * scaleOffset_IsNeighborTween.y,
+            scaleOffset_Visited.z * scaleOffset_HoverFeedback.z * scaleOffset_TargetState.z * scaleOffset_IsNeighbor.z * scaleOffset_IsNeighborTween.z
+        );
+    }
+
     private void UpdateCostPreviewDisplay()
     {
+        if(!costPreviewCanvas || !consumptionText) return;
+        
         //update cost preview
-        costPreviewText.text = $"- {node.PreviewCost} fuel";
+        consumptionText.text = $"{node.PreviewCost}";
 
         if (node.CurrentNodeState is NodeState.OutOfReach)
         {
-            costPreviewText.enabled = false;
+            consumptionText.enabled = false;
             return;
         }
         
-        switch (node.CurrentTargetState)
+        
+        
+        costPreviewCanvas.gameObject.SetActive(node.CurrentTargetState is not TargetState.NotTargeted);
+        costPreviewCanvas.transform.localScale = node.CurrentTargetState switch
         {
-            default:
-            case TargetState.NotTargeted:
-                costPreviewText.enabled = false;
-                break;
-            case TargetState.RouteEnd:
-                costPreviewText.enabled = true;
-                costPreviewText.transform.localScale = Vector3.one;
-                costPreviewText.color = Color.white;
-                break;
-            case TargetState.Targeted:
-                costPreviewText.enabled = true;
-                costPreviewText.transform.localScale = Vector3.one * 1.2f;
-                costPreviewText.color = new Color(1, 0.27f, 0.27f, 1);
-                break;
-        }
+            TargetState.Targeted => Vector3.one * 1.2f,
+            _ => Vector3.one
+        };
     }
     
     

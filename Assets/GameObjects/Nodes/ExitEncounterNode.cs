@@ -7,4 +7,6 @@ public class ExitEncounterNode : MonoBehaviour, IEncounterNode
     {
         return exitEncounter;
     }
+
+    public bool IsExit() => true;
 }

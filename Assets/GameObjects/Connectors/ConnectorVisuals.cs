@@ -36,7 +36,7 @@ public class ConnectorVisuals : MonoBehaviour
             1 => Instantiate(oneCostPrefab, indicatorCanvas.transform),
             _ => Instantiate(extraCostPrefab, indicatorCanvas.transform)
         };
-        connectedIndicator.SetCost(cost);
+        connectedIndicator.SetBaseCost(cost);
 
         baseColor = cost switch
         {
@@ -46,10 +46,10 @@ public class ConnectorVisuals : MonoBehaviour
         };
     }
 
-    private void SetHighlight(HighlightState state)
+    private void SetHighlight(HighlightState state, int routeCost)
     {
         // notify indicator
-        connectedIndicator.HighlightState = state;
+        connectedIndicator.UpdateIndicator(state, routeCost);
         
         // change road color
         switch (state)

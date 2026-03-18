@@ -147,6 +147,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
             node.Visited = true;
             EncounterManager.Instance.StartEncounter(node.GetEncounter());
         }
+        MarkNeighbors(true);
         UpdateHoverPreview();
     }
 
@@ -218,8 +219,10 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         EndHoverPreview();
         if (HoveredNode && HoveredNode != PlayerNode && CurrentlyAllowingPreview())
             EvaluateHoveredNode();
-        
-        MovePreviewChanged?.Invoke(TargetMoveCost);
+        else
+        {
+            MovePreviewChanged?.Invoke(0);
+        }
     }
 
     private void EvaluateHoveredNode()
@@ -283,7 +286,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         
                 //highlight connectors and nodes
                 TargetedNode.CurrentTargetState = TargetState.Targeted;
-                targetConnector.HighlightState = HighlightState.Targeted;
+                targetConnector.SetConnectorHighlightState(HighlightState.Targeted, TargetMoveCost);
                 
                 continue;
             }
@@ -297,11 +300,14 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
             }
             
             if (Connector.TryGetConnector(evaluatedNode, precedingNode, out Connector connector))
-                connector.HighlightState = HighlightState.Marked;
+                connector.SetConnectorHighlightState(HighlightState.Marked, evaluatedWaypoint.LowestMoveCost);
         }
         
-        // out of reach preview
-        // find the furthest legal target
+        
+        if(furthestLegalTarget)
+            MovePreviewChanged?.Invoke(furthestLegalTarget.CostToReach);
+        else
+            MovePreviewChanged?.Invoke(TargetMoveCost);
         
         
         // I think, I have to track this separately because otherwise it would use optimal values,
@@ -341,7 +347,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         }
         
         foreach (Connector connector in Connector.s_Connectors)
-            connector.HighlightState = HighlightState.Idle;
+            connector.SetConnectorHighlightState(HighlightState.Idle);
     }
     
     private void OnNodeClicked(Node clickedNode)
@@ -353,11 +359,22 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
             return;
         } 
         
+        MarkNeighbors(false);
+        
         PlayerNode = TargetedNode;
         CurrentFuel -= TargetMoveCost;
         PlayerMini.Instance.MoveToNode(TargetedNode);
     }
 
+    private void MarkNeighbors(bool isNeighbor)
+    {
+        List<Node> neighbors = Connector.GetAllConnectedNodesOf(PlayerNode);
+        foreach (Node neighbor in neighbors)
+        {
+            neighbor.IsNeighbor = isNeighbor;
+        }
+    }
+    
     public class Waypoint
     {
         public Node Node { get; private set; }

@@ -16,4 +16,6 @@ public class RandomEncounterNode : MonoBehaviour, IEncounterNode
             return combatEncounters[Random.Range(0, combatEncounters.Count)];
         return randomEncounters[Random.Range(0, randomEncounters.Count)];
     }
+
+    public bool IsExit() => false;
 }

@@ -7,4 +7,6 @@ public class ShopEncounterNode : MonoBehaviour, IEncounterNode
     {
         return shopEncounter;
     }
+
+    public bool IsExit() => false;
 }

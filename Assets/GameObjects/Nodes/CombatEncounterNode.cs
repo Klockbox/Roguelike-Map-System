@@ -11,9 +11,12 @@ public class CombatEncounterNode : MonoBehaviour, IEncounterNode
         int index = Random.Range(0, combatEncounters.Count);
         return combatEncounters[index];
     }
+
+    public bool IsExit() => false;
 }
 
 public interface IEncounterNode
 {
     MapEncounter GetEncounter();
+    bool IsExit();
 }

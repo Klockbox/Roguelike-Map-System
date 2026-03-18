@@ -36,17 +36,17 @@ public class Connector : MonoBehaviour
     private bool IsValid => Node1 && Node2 && Node1 != Node2;
 
     [SerializeField, ReadOnly]
-    private HighlightState _highlightState = HighlightState.Idle;
-    public HighlightState HighlightState
+    private HighlightState currentHighlightState = HighlightState.Idle;
+    
+
+    public void SetConnectorHighlightState(HighlightState newState, int routeCost = 0)
     {
-        get => _highlightState;
-        set
-        {
-            _highlightState = value;
-            HighlightStateChanged?.Invoke(_highlightState);
-        }
+        currentHighlightState = newState;
+        HighlightStateChanged?.Invoke(currentHighlightState, routeCost);
     }
-    public event Action<HighlightState> HighlightStateChanged;
+    
+    
+    public event Action<HighlightState, int> HighlightStateChanged;
 
     private void Awake()
     {
@@ -116,13 +116,13 @@ public class Connector : MonoBehaviour
     [Button]
     private void DebugCycleHighlight()
     {
-        HighlightState = HighlightState switch
+        /*HighlightState = HighlightState switch
         {
             HighlightState.Idle => HighlightState.Marked,
             HighlightState.Marked => HighlightState.Targeted,
             HighlightState.Targeted => HighlightState.Idle,
             _ => throw new ArgumentOutOfRangeException()
-        };
+        };*/
     }
 
     private void OnDrawGizmos()
