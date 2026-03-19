@@ -12,9 +12,10 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
 
     [SerializeField] private string pointActionReference;
     [SerializeField] private string clickActionReference;
+    [SerializeField] private string altClickActionReference;
     private InputAction point;
     private InputAction click;
-    
+    private InputAction altClick;
     
     [SerializeField]
     private LayerMask checkingLayers;
@@ -31,19 +32,28 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
     {
         pointerCam = Camera.main;
         
-        point = InputSystem.actions.FindAction("Point");
+        point = InputSystem.actions.FindAction(pointActionReference);
         
-        click = InputSystem.actions.FindAction("Click");
-        click.started += OnClick;
-        click.performed += OnClick;
-        click.canceled += OnClick;
+        click = InputSystem.actions.FindAction(clickActionReference);
+        click.started += OnMainClick;
+        click.performed += OnMainClick;
+        click.canceled += OnMainClick;
+        
+        altClick = InputSystem.actions.FindAction(altClickActionReference);
+        altClick.started += OnAltClick;
+        altClick.performed += OnAltClick;
+        altClick.canceled += OnAltClick;
     }
 
     private void OnDestroy()
     {
-        click.started -= OnClick;
-        click.performed -= OnClick;
-        click.canceled -= OnClick;
+        click.started -= OnMainClick;
+        click.performed -= OnMainClick;
+        click.canceled -= OnMainClick;
+        
+        altClick.started -= OnAltClick;
+        altClick.performed -= OnAltClick;
+        altClick.canceled -= OnAltClick;
     }
 
     private void Update()
@@ -105,12 +115,12 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
     
     
     //#################| Click |#################
-    #region Click
-    public void OnClick(InputAction.CallbackContext context)
+    #region MainClick
+    public void OnMainClick(InputAction.CallbackContext context)
     {
         if (context.started)
         {
-            OnClickStart(context);
+            OnMainClickStart(context);
             return;
         }
         
@@ -122,12 +132,12 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
 
         if (context.canceled)
         {
-            OnClickEnd(context);
+            OnMainClickEnd(context);
             return;
         }
     }
 
-    private void OnClickStart(InputAction.CallbackContext context)
+    private void OnMainClickStart(InputAction.CallbackContext context)
     {
         if (hoveredObject == null || Mouse.current == null) return;
         
@@ -136,7 +146,7 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
         clickedObject = hoveredObject;
     }
     
-    private void OnClickEnd(InputAction.CallbackContext context)
+    private void OnMainClickEnd(InputAction.CallbackContext context)
     {
         if(hoveredObject != null)
         {
@@ -147,6 +157,40 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
         }
         
         clickedObject = null;
+    }
+    #endregion
+    
+    #region AltClick
+    public void OnAltClick(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            OnAltClickStart(context);
+            return;
+        }
+        
+        if (context.performed)
+        {
+            // nothing
+            return;
+        }
+
+        if (context.canceled)
+        {
+            OnAltClickEnd(context);
+            return;
+        }
+    }
+
+    private void OnAltClickStart(InputAction.CallbackContext context)
+    {
+        if (Mouse.current == null) return;
+        hoveredObject?.OnPointerDown();
+    }
+    
+    private void OnAltClickEnd(InputAction.CallbackContext context)
+    {
+        hoveredObject?.OnAltClickUp();
     }
     #endregion
 }

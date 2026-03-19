@@ -45,6 +45,6 @@ public class ShopEncounter : MapEncounter
     public void BuyFuel()
     {
         MapManager.Instance.Money -= 5;
-        MapManager.Instance.CurrentFuel++;
+        MapManager.CurrentFuel++;
     }
 }

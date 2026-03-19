@@ -16,6 +16,15 @@
                     "initialStateCheck": true
                 },
                 {
+                    "name": "AltClick",
+                    "type": "Button",
+                    "id": "4ffccc40-1882-4245-bf51-3da2a661fec5",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
                     "name": "Point",
                     "type": "PassThrough",
                     "id": "451d6d71-26d7-4ed4-8a81-18282b867370",
@@ -45,6 +54,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Point",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4940c92e-b0ea-4ef9-9a46-244a8dcafe77",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "AltClick",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

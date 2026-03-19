@@ -36,17 +36,17 @@ public class Connector : MonoBehaviour
     private bool IsValid => Node1 && Node2 && Node1 != Node2;
 
     [SerializeField, ReadOnly]
-    private HighlightState currentHighlightState = HighlightState.Idle;
+    private RouteState currentRouteState = RouteState.Idle;
     
 
-    public void SetConnectorHighlightState(HighlightState newState, int routeCost = 0)
+    public void SetConnectorRouteState(RouteState newState, int routeCost = 0)
     {
-        currentHighlightState = newState;
-        HighlightStateChanged?.Invoke(currentHighlightState, routeCost);
+        currentRouteState = newState;
+        HighlightStateChanged?.Invoke(currentRouteState, routeCost);
     }
     
     
-    public event Action<HighlightState, int> HighlightStateChanged;
+    public event Action<RouteState, int> HighlightStateChanged;
 
     private void Awake()
     {
@@ -133,9 +133,10 @@ public class Connector : MonoBehaviour
     }
 }
 
-public enum HighlightState : byte
+public enum RouteState : byte
 {
     Idle,
-    Marked,
-    Targeted,
+    OnRoute,
+    NextRoute,
+    LastRoute
 }

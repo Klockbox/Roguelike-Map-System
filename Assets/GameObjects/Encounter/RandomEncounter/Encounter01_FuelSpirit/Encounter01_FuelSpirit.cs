@@ -9,7 +9,7 @@ public class Encounter01_Spirit : MapEncounter
     
     public void Accept()
     {
-        MapManager.Instance.CurrentFuel += 5;
+        MapManager.CurrentFuel += 5;
         MapManager.Instance.PointScore -= 10;
         EndEncounter();
     }

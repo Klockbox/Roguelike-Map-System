@@ -12,6 +12,7 @@ public class Node : MonoBehaviour, IClickableObject
     public static List<Node> s_ExitNodes = new List<Node>();
     
     public static event Action<Node> NodeClicked;
+    public static event Action<Node> NodeRightClicked;
     public static event Action<Node> AnyNodeHoverChanged;
     #endregion
     
@@ -51,21 +52,6 @@ public class Node : MonoBehaviour, IClickableObject
             NodeStateChanged?.Invoke();
         }
     }
-    
-    public event Action NeighboringChanged;
-    [field: SerializeField, ReadOnly, BoxGroup("Info")]
-    private bool _isNeighbor = false;
-    public bool IsNeighbor 
-    {
-        get => _isNeighbor;
-        set
-        {
-            _isNeighbor = value;
-            NeighboringChanged?.Invoke();
-        }
-    }
-
-    
     
     [field: SerializeField, ReadOnly, BoxGroup("Info")]
     private bool _hovered;
@@ -125,13 +111,21 @@ public class Node : MonoBehaviour, IClickableObject
             NodeStateChanged?.Invoke();
         } 
     }
+    
+    public event Action NeighboringChanged;
+    [field: SerializeField, ReadOnly, BoxGroup("Info")]
+    private bool _isNeighbor = false;
+    public bool IsNeighbor 
+    {
+        get => _isNeighbor;
+        set
+        {
+            _isNeighbor = value;
+            NeighboringChanged?.Invoke();
+        }
+    }
     #endregion
     
-    public int PreviewCost { get; private set; }
-    public void UpdatePreviewCost(int cost = 0)
-    {
-        PreviewCost = cost;
-    }
     
     private void OnEnable()
     {
@@ -157,7 +151,7 @@ public class Node : MonoBehaviour, IClickableObject
                 break;
         }
         
-        CurrentNodeState = TotalCost <= MapManager.Instance.CurrentFuel ? NodeState.InReach : NodeState.OutOfReach;
+        CurrentNodeState = TotalCost <= MapManager.CurrentFuel ? NodeState.InReach : NodeState.OutOfReach;
     }
     
     #region Debug
@@ -218,8 +212,12 @@ public class Node : MonoBehaviour, IClickableObject
     
     public void OnPointerUpAsClick()
     {
-        Debug.Log($"Clicked on {gameObject.name}.");
         NodeClicked?.Invoke(this);
+    }
+    
+    public void OnAltClickUp()
+    {
+        NodeRightClicked?.Invoke(this);
     }
 
     public void OnHoverStart()
@@ -250,6 +248,7 @@ public class Node : MonoBehaviour, IClickableObject
     public void OnPointerDown() { }
     public void OnPointerHold() { }
     public void OnPointerUp() { }
+    public void OnAltClickDown() { }
     public void OnDragStart(Vector2 pointerPos) { }
     public void OnDrag(Vector2 pointerPos) { }
     public void OnDragEnd(Vector2 pointerPos) { }

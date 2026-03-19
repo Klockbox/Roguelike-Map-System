@@ -38,31 +38,31 @@ public class ConnectionCostIndicator : MonoBehaviour
         if(previewCostTxt)
             previewCostTxt.text = (cost-1).ToString();
 
-        UpdateIndicator(HighlightState.Idle) ; // initial check
+        UpdateIndicator(RouteState.Idle) ; // initial check
     }
     
-    public void UpdateIndicator(HighlightState newState, int routeCost = 0)
+    public void UpdateIndicator(RouteState newState, int routeCost = 0)
     {
         if(previewCostObject)
-            previewCostObject.SetActive(newState is HighlightState.Idle);
-        totalCostObject.SetActive(newState is not HighlightState.Idle);
+            previewCostObject.SetActive(newState is RouteState.Idle);
+        totalCostObject.SetActive(newState is not RouteState.Idle);
 
-        if (newState is not HighlightState.Idle)
+        if (newState is not RouteState.Idle)
         {
             totalCostTxt.text = routeCost.ToString();
         }
         
         indicatorGroup.alpha = newState switch
         {
-            HighlightState.Marked => markedAlpha,
-            HighlightState.Targeted => targetedAlpha,
+            RouteState.OnRoute => markedAlpha,
+            RouteState.NextRoute => targetedAlpha,
             _ => idleAlpha,
         };
         
         transform.localScale = newState switch
         {
-            HighlightState.Marked => MarkedScale,
-            HighlightState.Targeted => TargetedScale,
+            RouteState.OnRoute => MarkedScale,
+            RouteState.NextRoute => TargetedScale,
             _ => IdleScale,
         };
     }
