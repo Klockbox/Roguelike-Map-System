@@ -529,11 +529,12 @@ MonoBehaviour:
   totalCostObject: {fileID: 2562654859789002286}
   totalCostTxt: {fileID: 5228791580715582619}
   idleAlpha: 0.5
-  markedAlpha: 1
+  markedAlpha: 0.75
   targetedAlpha: 1
   idleScaleFactor: 0.5
   markedScaleFactor: 0.75
-  targetedScaleFactor: 1
+  targetedScaleFactor: 1.6
+  endScaleFactor: 1.2
 --- !u!1 &8769327180646140098
 GameObject:
   m_ObjectHideFlags: 0
@@ -592,7 +593,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.5019608}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.6666667}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

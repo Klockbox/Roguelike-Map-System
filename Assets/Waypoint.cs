@@ -8,6 +8,9 @@ using UnityEngine;
 [Serializable]
 public class Waypoint
 {
+    [HideInInspector]
+    public string NodeName;
+    [field: SerializeField]
     public Node Node { get; private set; }
     public Node PreviousNode { get; private set; }
     public int LowestMoveCost { get; private set; }
@@ -17,6 +20,7 @@ public class Waypoint
     {
         PreviousNode = prevNode;
         LowestMoveCost = totalMoveCost;
+        UpdateName();
         if (Connector.TryGetConnector(Node, prevNode, out Connector connector))
             Connection = connector;
         else
@@ -24,11 +28,19 @@ public class Waypoint
     }
 
     public void OverrideMoveCost(int newCost) => LowestMoveCost = newCost;
-        
+    private void UpdateName() => NodeName = Node ? $"to {Node.name} for {LowestMoveCost}" : "invalid";
     public Waypoint(Node node, int dist, Node prevNode)
     {
         Node = node;
         LowestMoveCost = dist;
         PreviousNode = prevNode;
+
+        UpdateName();
+        
+        if(!prevNode || !node) return; // no need to check for connector if no prev node is given
+        if (Connector.TryGetConnector(node, prevNode, out Connector connector))
+            Connection = connector;
+        else
+            Debug.LogWarning($"Tried to set new previous node ({prevNode.name}) on waypoint of node {Node.name} but was unable to find connector.");
     }
 }

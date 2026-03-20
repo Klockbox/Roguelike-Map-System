@@ -28,6 +28,13 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
     
     private IClickableObject clickedObject;
 
+
+    public static event Action<IClickableObject> PointerMainDown;
+    public static event Action<IClickableObject> PointerMainUp;
+    
+    public static event Action<IClickableObject> PointerAltDown;
+    public static event Action<IClickableObject> PointerAltUp;
+    
     private void Start()
     {
         pointerCam = Camera.main;
@@ -120,6 +127,7 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
     {
         if (context.started)
         {
+            PointerMainDown?.Invoke(hoveredObject);
             OnMainClickStart(context);
             return;
         }
@@ -132,6 +140,7 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
 
         if (context.canceled)
         {
+            PointerMainUp?.Invoke(hoveredObject);
             OnMainClickEnd(context);
             return;
         }
@@ -165,6 +174,7 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
     {
         if (context.started)
         {
+            PointerAltDown?.Invoke(hoveredObject);
             OnAltClickStart(context);
             return;
         }
@@ -177,6 +187,7 @@ public class PointerHandler : SimpleMonoBehaviorSingleton<PointerHandler>
 
         if (context.canceled)
         {
+            PointerAltUp?.Invoke(hoveredObject);
             OnAltClickEnd(context);
             return;
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NaughtyAttributes;
 using UnityEditor;
 using UnityEngine;
@@ -10,6 +11,12 @@ public class Node : MonoBehaviour, IClickableObject
     #region static management
     public static List<Node> s_Nodes = new List<Node>();
     public static List<Node> s_ExitNodes = new List<Node>();
+
+    public static List<Node> AllNodesExcept(List<Node> nodesToExclude)
+    {
+        if (nodesToExclude == null) return s_Nodes;
+        return s_Nodes.Except(nodesToExclude).ToList();
+    }
     
     public static event Action<Node> NodeClicked;
     public static event Action<Node> NodeRightClicked;
@@ -124,6 +131,18 @@ public class Node : MonoBehaviour, IClickableObject
             NeighboringChanged?.Invoke();
         }
     }
+    
+    private bool _isStopover;
+    public bool IsStopover
+    {
+        get => _isStopover;
+        set
+        {
+            _isStopover = value;
+            StopoverStateChanged?.Invoke(_isStopover);
+        } 
+    }
+    public event Action<bool> StopoverStateChanged;
     #endregion
     
     
@@ -192,9 +211,9 @@ public class Node : MonoBehaviour, IClickableObject
         switch (CurrentTargetState)
         {
             case TargetState.NotTargeted:
-                CurrentTargetState = TargetState.RouteEnd;
+                CurrentTargetState = TargetState.Waypoint;
                 break;
-            case TargetState.RouteEnd:
+            case TargetState.Waypoint:
                 CurrentTargetState = TargetState.Targeted;
                 break;
             case TargetState.Targeted:
@@ -270,9 +289,14 @@ public enum RoutingState : byte
     Marked
 }
 
+/// <summary>
+/// <see cref="NotTargeted"/>,
+/// <see cref="Waypoint"/>,
+/// <see cref="Targeted"/>,
+/// </summary>
 public enum TargetState : byte
 {
     NotTargeted,
-    RouteEnd,
+    Waypoint,
     Targeted
 }

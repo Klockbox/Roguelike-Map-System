@@ -170,7 +170,7 @@ MonoBehaviour:
   Node1: {fileID: 0}
   Node2: {fileID: 0}
   MoveCost: 2
-  currentRouteState: 0
+  currentConnectorState: 0
 --- !u!114 &851478958508480624
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -55,6 +55,7 @@ public static class DijkstraUtility
             evaluatedWaypoint = map[evaluatedWaypoint.PreviousNode];
         }
         
+        
         waypointChain.Reverse(); // sort it that neighbor target is [0]
         return waypointChain;
     }

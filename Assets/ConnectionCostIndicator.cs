@@ -12,18 +12,20 @@ public class ConnectionCostIndicator : MonoBehaviour
     [SerializeField, BoxGroup("References")] private TMP_Text totalCostTxt;
     
     [SerializeField, BoxGroup("State - Idle")] private float idleAlpha = 0.5f;
-    [SerializeField, BoxGroup("State - Marked")] private float markedAlpha = 1;
+    [SerializeField, BoxGroup("State - Marked")] private float markedAlpha = 0.5f;
     [SerializeField, BoxGroup("State - Targeted")] private float targetedAlpha = 1;
     
     [SerializeField, BoxGroup("State - Idle")] private float idleScaleFactor = 0.5f;
     private Vector3 IdleScale => new Vector3(idleScaleFactor, idleScaleFactor, idleScaleFactor);
-    
-    [SerializeField, BoxGroup("State - Marked")] private float markedScaleFactor = 1;
+
+    [SerializeField, BoxGroup("State - Marked")] private float markedScaleFactor = 0.8f;
     private Vector3 MarkedScale => new Vector3(markedScaleFactor, markedScaleFactor, markedScaleFactor);
     
     [SerializeField, BoxGroup("State - Targeted")] private float targetedScaleFactor = 1.2f;
     private Vector3 TargetedScale => new Vector3(targetedScaleFactor, targetedScaleFactor, targetedScaleFactor);
     
+    [SerializeField, BoxGroup("State - LastRoute")] private float endScaleFactor = 1f;
+    private Vector3 EndScale => new Vector3(endScaleFactor, endScaleFactor, endScaleFactor);
 
     private void Awake()
     {
@@ -38,31 +40,33 @@ public class ConnectionCostIndicator : MonoBehaviour
         if(previewCostTxt)
             previewCostTxt.text = (cost-1).ToString();
 
-        UpdateIndicator(RouteState.Idle) ; // initial check
+        UpdateIndicator(ConnectorState.Idle) ; // initial check
     }
     
-    public void UpdateIndicator(RouteState newState, int routeCost = 0)
+    public void UpdateIndicator(ConnectorState newState, int routeCost = 0)
     {
         if(previewCostObject)
-            previewCostObject.SetActive(newState is RouteState.Idle);
-        totalCostObject.SetActive(newState is not RouteState.Idle);
+            previewCostObject.SetActive(newState is ConnectorState.Idle);
+        totalCostObject.SetActive(newState is not ConnectorState.Idle);
 
-        if (newState is not RouteState.Idle)
+        if (newState is not ConnectorState.Idle)
         {
             totalCostTxt.text = routeCost.ToString();
         }
         
         indicatorGroup.alpha = newState switch
         {
-            RouteState.OnRoute => markedAlpha,
-            RouteState.NextRoute => targetedAlpha,
+            ConnectorState.OnRoute => markedAlpha,
+            ConnectorState.NextRoute => targetedAlpha,
+            ConnectorState.LastRoute => targetedAlpha,
             _ => idleAlpha,
         };
         
         transform.localScale = newState switch
         {
-            RouteState.OnRoute => MarkedScale,
-            RouteState.NextRoute => TargetedScale,
+            ConnectorState.OnRoute => MarkedScale,
+            ConnectorState.NextRoute => TargetedScale,
+            ConnectorState.LastRoute => EndScale,
             _ => IdleScale,
         };
     }

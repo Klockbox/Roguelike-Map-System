@@ -11,6 +11,11 @@ public class Connector : MonoBehaviour
     //###############| static class behavior |###############
     #region static class behavior
     public static List<Connector> s_Connectors = new List<Connector>();
+    public static List<Connector> AllConnectorsExcept(List<Connector> connectorsToExclude)
+    {
+        if (connectorsToExclude == null) return s_Connectors;
+        return s_Connectors.Except(connectorsToExclude).ToList();
+    }
     public static List<Connector> GetAllConnectorsFrom(Node node) => s_Connectors.Where(connector => connector.Connects(node)).ToList();
     public static List<Node> GetAllConnectedNodesOf(Node node) => GetAllConnectorsFrom(node).Select(c => c.GetOther(node)).ToList();
 
@@ -36,17 +41,17 @@ public class Connector : MonoBehaviour
     private bool IsValid => Node1 && Node2 && Node1 != Node2;
 
     [SerializeField, ReadOnly]
-    private RouteState currentRouteState = RouteState.Idle;
+    private ConnectorState currentConnectorState = ConnectorState.Idle;
     
 
-    public void SetConnectorRouteState(RouteState newState, int routeCost = 0)
+    public void SetConnectorRouteState(ConnectorState newState, int routeCost = 0)
     {
-        currentRouteState = newState;
-        HighlightStateChanged?.Invoke(currentRouteState, routeCost);
+        currentConnectorState = newState;
+        HighlightStateChanged?.Invoke(currentConnectorState, routeCost);
     }
     
     
-    public event Action<RouteState, int> HighlightStateChanged;
+    public event Action<ConnectorState, int> HighlightStateChanged;
 
     private void Awake()
     {
@@ -133,7 +138,7 @@ public class Connector : MonoBehaviour
     }
 }
 
-public enum RouteState : byte
+public enum ConnectorState : byte
 {
     Idle,
     OnRoute,

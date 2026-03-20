@@ -86,11 +86,11 @@ public class NodeVisual : MonoBehaviour
             case TargetState.NotTargeted:
                 scaleOffset_TargetState = Vector3.one;
                 break;
-            case TargetState.RouteEnd:
-                scaleOffset_TargetState = Vector3.one * 1.1f;
+            case TargetState.Waypoint:
+                scaleOffset_TargetState = Vector3.one * 1.5f;
                 break;
             case TargetState.Targeted:
-                scaleOffset_TargetState = Vector3.one * 1.2f;
+                scaleOffset_TargetState = Vector3.one * 2f;
                 break;
         }
     }
@@ -125,29 +125,28 @@ public class NodeVisual : MonoBehaviour
             };
         }
         
-        
-        
         meshRenderer.material.color = baseColor;
     }
 
     private void Update()
     {
+        Vector3 neighborOrTargetOffset = node.CurrentTargetState is TargetState.Targeted
+            ? scaleOffset_TargetState
+            : scaleOffset_IsNeighbor;
+        
         meshOrigin.localScale = new Vector3(
-            scaleOffset_Visited.x * scaleOffset_HoverFeedback.x * scaleOffset_TargetState.x * scaleOffset_IsNeighbor.x * scaleOffset_IsNeighborTween.x,
-            scaleOffset_Visited.y * scaleOffset_HoverFeedback.y * scaleOffset_TargetState.y * scaleOffset_IsNeighbor.y * scaleOffset_IsNeighborTween.y,
-            scaleOffset_Visited.z * scaleOffset_HoverFeedback.z * scaleOffset_TargetState.z * scaleOffset_IsNeighbor.z * scaleOffset_IsNeighborTween.z
+            scaleOffset_Visited.x * scaleOffset_HoverFeedback.x * neighborOrTargetOffset.x * scaleOffset_IsNeighborTween.x,
+            scaleOffset_Visited.y * scaleOffset_HoverFeedback.y * neighborOrTargetOffset.y * scaleOffset_IsNeighborTween.y,
+            scaleOffset_Visited.z * scaleOffset_HoverFeedback.z * neighborOrTargetOffset.z * scaleOffset_IsNeighborTween.z
         );
     }
     
     
     private IEnumerator PreviewOutOfReach()
     {
-        float timer = 0;
-        
         while (node.PreviewingOutOfReach)
         {
-            timer += Time.deltaTime * 4;
-            float delta = (Mathf.Sin(timer) + 1) / 2;
+            float delta = (Mathf.Sin(Time.time * 4) + 1) / 2;
             delta *= 0.5f;
             meshRenderer.material.color = ColorUtility.MultiplyBlend(baseColor, illegalColor, delta);
             yield return null;

@@ -216,135 +216,9 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 
     private void UpdateHoverPreview()
     {
-        EndHoverPreview();
-        if (HoveredNode && HoveredNode != PlayerNode && CurrentlyAllowingPreview())
-            EvaluateHoveredNode();
-        else
-        {
-            MovePreviewChanged?.Invoke(0);
-        }
-    }
-
-    private void EvaluateHoveredNode()
-    {
-        LegalMove = false;
-        if(HoveredNode == PlayerNode) return;
-        
-        bool hoveredNodeIsNeighbor = Connector.TryGetConnector(PlayerNode, HoveredNode, out Connector connectorToNeighbor);
-        
-        // check if we can ignore routing
-        bool canMoveDirectlyToHoveredNode = 
-            hoveredNodeIsNeighbor // is it a neighbor?
-            && connectorToNeighbor.MoveCost <= CurrentFuel // can I cover the direct movement cost?
-            && connectorToNeighbor.MoveCost + HoveredNode.CostToLeave <= CurrentFuel; // can you still leave from there?
-
-        // Write dijkstra route as list
-        List<Waypoint> dijkstraRoute = 
-            canMoveDirectlyToHoveredNode ? 
-                new List<Waypoint> { new (HoveredNode, connectorToNeighbor.MoveCost, PlayerNode) } : 
-                GetRouteOnDijkstraMap(dijkstraRoutesFromPlayer, PlayerNode, HoveredNode);
-
-        // evaluate nodes on route
-        Node furthestLegalTarget = null;
-        
-        
-        for (int i = dijkstraRoute.Count - 1; i >= 0; i--)
-        {
-            Waypoint evaluatedWaypoint = dijkstraRoute[i];
-            Node evaluatedNode = evaluatedWaypoint.Node;
-            Node precedingNode = evaluatedWaypoint.PreviousNode;
-
-            // mark all nodes along route
-            //evaluatedNode.CurrentRoutingState = RoutingState.Marked;
-            
-            if (i == 0)
-            {
-                // target
-                Connector.TryGetConnector(evaluatedNode, precedingNode, out Connector targetConnector);
-                TargetedNode = evaluatedNode;
-                TargetMoveCost = targetConnector.MoveCost;
-                LegalMove = TargetMoveCost + TargetedNode.CostToLeave <= CurrentFuel;
-                
-        
-                //highlight connectors and nodes
-                //TargetedNode.CurrentTargetState = TargetState.Targeted;
-                //targetConnector.SetConnectorRouteState(RouteState.NextRoute, TargetMoveCost);
-                
-                continue;
-            }
-
-            // determine legal route end and mark it
-            if (!furthestLegalTarget && evaluatedWaypoint.LowestMoveCost + evaluatedNode.CostToLeave <= CurrentFuel)
-            {
-                furthestLegalTarget = evaluatedNode;
-                //evaluatedNode.CurrentTargetState = TargetState.RouteEnd;
-            }
-            
-            //if (Connector.TryGetConnector(evaluatedNode, precedingNode, out Connector connector)) connector.SetConnectorRouteState(RouteState.OnRoute, evaluatedWaypoint.LowestMoveCost);
-        }
-        
-        // rn just used for fuel counter preview
-        MovePreviewChanged?.Invoke(furthestLegalTarget ? furthestLegalTarget.CostToReach : TargetMoveCost);
-
-        // I think, I have to track this separately because otherwise it would use optimal values,
-        // which might get thrown off, when using neighbor override
-        int costToFurthestLegalTarget = 0;
-        foreach (Waypoint waypoint in dijkstraRoute)
-        {
-            if (waypoint.Node.CurrentNodeState is not NodeState.InReach) continue;
-            furthestLegalTarget = waypoint.Node;
-            costToFurthestLegalTarget = waypoint.LowestMoveCost;
-        }
-        
-        if(!furthestLegalTarget) return;
-        
-        Dictionary<Node, Waypoint> waypoints = CalculateDijkstra(furthestLegalTarget);
-        foreach (Waypoint waypoint in waypoints.Values)
-        {
-            if(waypoint.Node.CurrentNodeState is NodeState.OutOfReach) continue;
-            bool willBeOutOfReach = (waypoint.LowestMoveCost + waypoint.Node.CostToLeave) > CurrentFuel - costToFurthestLegalTarget;
-            if (willBeOutOfReach)
-                waypoint.Node.PreviewingOutOfReach = true;
-        }
-    }
-    
-    private static List<Waypoint> GetRouteOnDijkstraMap(Dictionary<Node, Waypoint> map, Node routeStart, Node routeEnd)
-    {
-        List<Waypoint> waypointChain = new();
-        
-        // construct route
-        Waypoint evaluatedWaypoint = map[routeEnd];
-
-        while (evaluatedWaypoint.Node != routeStart)
-        {
-            waypointChain.Add(evaluatedWaypoint);
-            evaluatedWaypoint = map[evaluatedWaypoint.PreviousNode];
-        }
-        
-        waypointChain.Reverse(); // sort it that neighbor target is [0]
-        return waypointChain;
-    }
-
-    
-
-    private void EndHoverPreview()
-    {
         return;
-        TargetedNode = null;
-        LegalMove = false;
-        TargetMoveCost = 0;
-
-        foreach (Node node in Node.s_Nodes)
-        {
-            node.CurrentRoutingState = RoutingState.NotOnRoute;
-            node.CurrentTargetState = TargetState.NotTargeted;
-            node.PreviewingOutOfReach = false;
-        }
-        
-        foreach (Connector connector in Connector.s_Connectors)
-            connector.SetConnectorRouteState(RouteState.Idle);
     }
-    
+
     private void OnNodeClicked(Node clickedNode)
     {
         if (!LegalMove
@@ -356,7 +230,7 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         
         MarkNeighbors(false);
         
-        PlayerNode = TargetedNode;
+        PlayerNode = RouteManager.Instance.TargetedNode;
         CurrentFuel -= TargetMoveCost;
         PlayerMini.Instance.MoveToNode(TargetedNode);
     }

@@ -46,7 +46,7 @@ public class ConnectorVisuals : MonoBehaviour
         };
     }
 
-    private void SetHighlight(RouteState state, int routeCost)
+    private void SetHighlight(ConnectorState state, int routeCost)
     {
         // notify indicator
         connectedIndicator.UpdateIndicator(state, routeCost);
@@ -55,13 +55,13 @@ public class ConnectorVisuals : MonoBehaviour
         switch (state)
         {
             default:
-            case RouteState.Idle:
+            case ConnectorState.Idle:
                 connectionMeshRenderer.material.color = baseColor;
                 break;
-            case RouteState.OnRoute:
+            case ConnectorState.OnRoute:
                 connectionMeshRenderer.material.color = ColorUtility.NegativeMultiplyBlend(baseColor, HighlightColor, 0.3f);
                 break;
-            case RouteState.NextRoute:
+            case ConnectorState.NextRoute:
                 connectionMeshRenderer.material.color = HighlightColor;
                 break;
         }
