@@ -3,8 +3,10 @@ using System.Collections;
 using DG.Tweening;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
+using NaughtyAttributes;
 using TMPro;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class NodeVisual : MonoBehaviour
 {
@@ -21,23 +23,36 @@ public class NodeVisual : MonoBehaviour
     [Header("Options")]
     private Color idleColor;
     private Color baseColor;
+    [SerializeField] private Color stopoverColor;
     [SerializeField] private Color illegalColor;
     [SerializeField] private Color highlightColor;
 
     private Sequence onHoverTween;
     private Sequence neighborTween;
     
-    [SerializeField] private Vector3 scaleOffset_Visited = Vector3.one;
-    [SerializeField] private Vector3 scaleOffset_HoverFeedback = Vector3.one;
-    [SerializeField] private Vector3 scaleOffset_TargetState = Vector3.one;
-    [SerializeField] private Vector3 scaleOffset_IsNeighbor = Vector3.one;
-    [SerializeField] private Vector3 scaleOffset_IsNeighborTween = Vector3.one;
+    [SerializeField, ReadOnly] private Vector3 scaleOffset_Visited = Vector3.one;
+    [SerializeField, ReadOnly] private Vector3 scaleOffset_HoverFeedback = Vector3.one;
+    [SerializeField, ReadOnly] private Vector3 scaleOffset_TargetState = Vector3.one;
+    [SerializeField, ReadOnly] private Vector3 scaleOffset_IsNeighbor = Vector3.one;
+    [SerializeField, ReadOnly] private Vector3 scaleOffset_IsNeighborTween = Vector3.one;
+
+    [SerializeField] private StopoverPin pinPrefab;
+    [SerializeField] private StopoverPin spawnedPin;
+    [SerializeField] private Transform stopoverPinSpawn;
     
     private void Awake()
     {
         idleColor = meshRenderer.material.color;
         node.NodeStateChanged += OnNodeStateChanged;
         node.NeighboringChanged += OnNeighboringChanged;
+        node.StopoverStateChanged += OnStopoverStateChanged;
+    }
+
+    private void OnDestroy()
+    {
+        node.NodeStateChanged -= OnNodeStateChanged;
+        node.NeighboringChanged -= OnNeighboringChanged;
+        node.StopoverStateChanged -= OnStopoverStateChanged;
     }
 
     private void OnNeighboringChanged()
@@ -86,22 +101,34 @@ public class NodeVisual : MonoBehaviour
             case TargetState.NotTargeted:
                 scaleOffset_TargetState = Vector3.one;
                 break;
-            case TargetState.Waypoint:
-                scaleOffset_TargetState = Vector3.one * 1.5f;
-                break;
             case TargetState.Targeted:
                 scaleOffset_TargetState = Vector3.one * 2f;
                 break;
         }
     }
 
+    private void OnStopoverStateChanged(bool isStopover)
+    {
+        if (isStopover)
+            spawnedPin = Instantiate(pinPrefab, stopoverPinSpawn);
+        else if (spawnedPin )
+            Destroy(spawnedPin.gameObject);
+    }
+
     private void UpdateBaseColor()
     {
+        baseColor = node.IsStopover switch
+        {
+            false => idleColor,
+            true => stopoverColor
+        }; 
+        
+        
         baseColor = node.CurrentNodeState switch
         {
-            NodeState.InReach => idleColor,
+            NodeState.InReach => baseColor,
             NodeState.OutOfReach => ColorUtility.MultiplyBlend(ColorUtility.SimpleGrayConversion(idleColor), Color.black, 0.3f),
-            _ => idleColor
+            _ => baseColor
         };
 
         if (node.Hovered)
@@ -111,7 +138,7 @@ public class NodeVisual : MonoBehaviour
             onHoverTween?.Complete();
             onHoverTween = DOTween.Sequence();
             //onHoverTween.Append(meshTransform.transform.DOPunchScale(Vector3.one * 0.05f, 0.5f)).OnComplete(() => onHoverTween = null);
-            TweenerCore<Vector3, Vector3[], Vector3ArrayOptions> punchTween = DOTween.Punch(() => scaleOffset_HoverFeedback, x => scaleOffset_HoverFeedback = x, Vector3.one * 0.05f, 0.5f);
+            TweenerCore<Vector3, Vector3[], Vector3ArrayOptions> punchTween = DOTween.Punch(() => scaleOffset_HoverFeedback, x => scaleOffset_HoverFeedback = x, Vector3.one * 0.2f, 0.5f);
             onHoverTween.Append(punchTween);
         }
         

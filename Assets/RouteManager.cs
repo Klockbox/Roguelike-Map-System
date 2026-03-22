@@ -6,7 +6,7 @@ using UnityEngine;
 [Serializable]
 public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
 {
-    public Node TargetedNode;
+    public static event Action<MapMove> DeterminedNewMove;
     
     [SerializeField] private Node startNode;
     private Dictionary<Node, Waypoint> startMap;
@@ -26,7 +26,7 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
         RoutePlanned ? // if list exists and has entries
             routeSegments[^1].FuelAtDestination : // return last stopover
             FuelAtStart; // else return start node
-
+    
     private Dictionary<Node, Waypoint> GetLatestPlannedMapStage()
     {
         return RoutePlanned ? LastPlannedRoute.DijkstraMapFromDestination : startMap; // else return map stage
@@ -36,7 +36,7 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
     
     private Node FurthestStopoverNode => RoutePlanned ? SegmentStopoverNodes[^1] : null;
     private List<Node> SegmentStopoverNodes => routeSegments.Select(x => x.DestinationNode).ToList();
-    private List<Waypoint> SegmentStopovers => routeSegments.Select(x => x.FurthestWaypoint).ToList();
+    private List<Waypoint> SegmentStopovers => routeSegments.Select(x => x.DestinationWaypoint).ToList();
     
     [SerializeField]
     private List<Route> routeSegments = new();
@@ -72,7 +72,7 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
     private void OnNodeHoverChanged(Node hoveredNode)
     {
         previewNode = hoveredNode;
-        UpdatePreview();
+        UpdateRoute();
     }
     
     private void OnRightClick(IClickableObject rightClickedObject)
@@ -100,23 +100,34 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
         
         // click on new waypoint
         if(previewRoute == null) return; // you can't have a previewRouteSegment, when hovering over the player node. no need to worry
-        routeSegments.Add(previewRoute);
-        UpdatePreview();
+        AddStopover();
     }
 
-    private void RemoveAllRouteSegments()
+    private void AddStopover()
     {
-        routeSegments.Clear();
-        UpdatePreview();
+        routeSegments.Add(previewRoute);
+        previewRoute.DestinationNode.IsStopover = true;
+        UpdateRoute();
     }
     
     private void RemoveLastPlannedRouteSegment()
     {
+        routeSegments[^1].DestinationNode.IsStopover = false;
         routeSegments.RemoveAt(routeSegments.Count - 1);
-        UpdatePreview();
+        UpdateRoute();
     }
 
-    private void UpdatePreview()
+    private void RemoveAllRouteSegments()
+    {
+        foreach (Route segment in routeSegments)
+            segment.DestinationNode.IsStopover = false;
+        
+        routeSegments.Clear();
+        UpdateRoute();
+    }
+    
+    
+    private void UpdateRoute()
     {
         if(previewNode && previewNode != NodeToCheckPreviewFrom)
             ConstructPreviewRouteSegment();
@@ -173,12 +184,12 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
         
         for (int i = 0; i < segmentedRoute.Count; i++)
         {
-            Route current = segmentedRoute[i];
+            Route currentSegment = segmentedRoute[i];
             Route prev = i > 0 ? segmentedRoute[i-1] : null;
             if (prev != null) costOffset += prev.SegmentFuelCost;
             
             // evaluate waypoints
-            foreach (Waypoint waypointFromSegmentedRoute in current.Waypoints)
+            foreach (Waypoint waypointFromSegmentedRoute in currentSegment.Waypoints)
             {
                 combinedRoute.Add(new Waypoint(waypointFromSegmentedRoute.Node, waypointFromSegmentedRoute.LowestMoveCost + costOffset, waypointFromSegmentedRoute.PreviousNode));
             }
@@ -191,49 +202,62 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
 
     private void EvaluateRoute(Route route)
     {
+        MapMove move = new();
+
+        move.TargetedNode = route?.NextNode;
+        move.StartNode = startNode;
+        move.MoveCost = route != null && route.ConnectorToNextNode != null ? route.ConnectorToNextNode.MoveCost : -1;
+        move.IsLegal = route != null && route.ConnectorToNextNode != null &&
+                       route.ConnectorToNextNode.MoveCost + route.NextNode.CostToLeave <= route.StartFuel;
+        
+        DeterminedNewMove?.Invoke(move);
+        
+        MarkNodeAndConnectorStatesOnRoute(route);
+
+        EvaluateOutOfReachFromDestination(route);
+        
+        UnmarkAllMapElementsNotOnRoute(route);
+    }
+
+    
+    private static void MarkNodeAndConnectorStatesOnRoute(Route route)
+    {
         foreach (Waypoint waypoint in route.Waypoints)
         {
+            if(waypoint.LowestMoveCost + waypoint.Node.CostToLeave > route.StartFuel) continue; // don't mark nodes out of reach
+            
             if (waypoint == route.NextWaypoint)
             {
-                TargetedNode = waypoint.Node;
-                TargetedNode.CurrentTargetState = TargetState.Targeted;
-                TargetedNode.CurrentRoutingState = RoutingState.Marked;
+                waypoint.Node.CurrentTargetState = TargetState.Targeted;
+                waypoint.Node.CurrentRoutingState = RoutingState.Marked;
                 waypoint.Connection.SetConnectorRouteState(ConnectorState.NextRoute, waypoint.LowestMoveCost);
                 continue;
             }
-
-            if (waypoint == route.FurthestLegalWaypoint)
-            {
-                waypoint.Node.CurrentTargetState = TargetState.Targeted;
-                waypoint.Connection.SetConnectorRouteState(ConnectorState.LastRoute, waypoint.LowestMoveCost);
-                continue;
-            }
-
-            if (SegmentStopoverNodes.Contains(waypoint.Node))
-            {
-                waypoint.Node.CurrentTargetState = TargetState.Waypoint;
-            }
-            else
-                waypoint.Node.CurrentTargetState = TargetState.NotTargeted;
             
+            waypoint.Node.CurrentTargetState = TargetState.NotTargeted;
             waypoint.Node.CurrentRoutingState = RoutingState.Marked;
-            
             waypoint.Connection.SetConnectorRouteState(ConnectorState.OnRoute, waypoint.LowestMoveCost);
         }
-
+    }
+    
+    private static void EvaluateOutOfReachFromDestination(Route route)
+    {
         foreach (Waypoint waypointFromDestination in route.DijkstraMapFromDestination.Values)
         {
             waypointFromDestination.Node.PreviewingOutOfReach =
                 waypointFromDestination.LowestMoveCost + waypointFromDestination.Node.CostToLeave > route.FuelAtDestination;
         }
-        
+    }
+    
+    private static void UnmarkAllMapElementsNotOnRoute(Route route)
+    {
         // unmark all nodes not on route
         foreach (Node node in Node.AllNodesExcept(route.RouteNodes))
         {
             node.CurrentRoutingState = RoutingState.NotOnRoute;
             node.CurrentTargetState = TargetState.NotTargeted;
         }
-        
+
         // unmark all connectors not on route
         foreach (Connector connector in Connector.AllConnectorsExcept(route.RouteConnectors))
         {
@@ -255,10 +279,12 @@ public class Route
     public Dictionary<Node, Waypoint> DijkstraMapFromDestination { get; private set; }
     
     private bool ContainsRoute => Waypoints is {Count: > 0};
-    public Node DestinationNode => ContainsRoute ? FurthestWaypoint.Node : null;
     public Node StartNode => ContainsRoute ? Waypoints[0].PreviousNode : null;
     public Waypoint NextWaypoint => ContainsRoute ? Waypoints[0] : null;
-    public Waypoint FurthestWaypoint =>  ContainsRoute ? Waypoints[^1] : null;
+    public Node NextNode => NextWaypoint?.Node;
+    public Connector ConnectorToNextNode => NextWaypoint?.Connection;
+    public Waypoint DestinationWaypoint =>  ContainsRoute ? Waypoints[^1] : null;
+    public Node DestinationNode => DestinationWaypoint?.Node;
     
     [field: SerializeField]
     public Waypoint FurthestLegalWaypoint { get; private set; } = null;
@@ -278,7 +304,7 @@ public class Route
     public List<Connector> RouteConnectors => Waypoints.Select(c => c.Connection).ToList();
     
     public int FuelAtDestination => ContainsRoute ? StartFuel - SegmentFuelCost : StartFuel;
-    public int SegmentFuelCost => ContainsRoute ? FurthestWaypoint.LowestMoveCost : 0;
+    public int SegmentFuelCost => ContainsRoute ? DestinationWaypoint.LowestMoveCost : 0;
 
     public Route(int startFuel, List<Waypoint> waypoints, Dictionary<Node, Waypoint> dijkstraMapFromDestination)
     {

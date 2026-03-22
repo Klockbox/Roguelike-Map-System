@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1652730149235194329
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3641153342452355437}
+  m_Layer: 0
+  m_Name: PinSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3641153342452355437
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1652730149235194329}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0.000000006519257, w: 1}
+  m_LocalPosition: {x: 0.291, y: 0, z: 0.397}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4314622246871195212}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4156960363325703232
 GameObject:
   m_ObjectHideFlags: 0
@@ -119,6 +150,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6038719729708536877}
+  - {fileID: 3641153342452355437}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &8141778364006408560
@@ -140,8 +172,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.6, y: 0.2, z: 0.6}
+  m_Center: {x: 0, y: 0.1, z: 0}
 --- !u!114 &3986626873733495567
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -158,11 +190,11 @@ MonoBehaviour:
   <CostToReach>k__BackingField: 0
   <CostToLeave>k__BackingField: 0
   _visited: 0
-  _isNeighbor: 0
   _hovered: 0
   _currentNodeState: 0
   _currentRoutingState: 0
   _currentTargetState: 0
+  _isNeighbor: 0
 --- !u!114 &4535497609911903127
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -179,8 +211,7 @@ MonoBehaviour:
   meshOrigin: {fileID: 6038719729708536877}
   meshTransform: {fileID: 6499721638241764867}
   meshRenderer: {fileID: 3203707192244810532}
-  consumptionText: {fileID: 0}
-  costPreviewCanvas: {fileID: 0}
+  stopoverColor: {r: 0.27401206, g: 0.56611705, b: 0.8113208, a: 1}
   illegalColor: {r: 1, g: 0, b: 0, a: 1}
   highlightColor: {r: 1, g: 1, b: 0.5, a: 1}
   scaleOffset_Visited: {x: 1, y: 1, z: 1}
@@ -188,6 +219,10 @@ MonoBehaviour:
   scaleOffset_TargetState: {x: 1, y: 1, z: 1}
   scaleOffset_IsNeighbor: {x: 1, y: 1, z: 1}
   scaleOffset_IsNeighborTween: {x: 1, y: 1, z: 1}
+  pinPrefab: {fileID: 2600330815696821631, guid: 961dc7f6d6d9c6d40835459b6a191851, type: 3}
+  stopoverPinSpawn: {fileID: 3641153342452355437}
+  stopoverPinEulerRangeX: {x: 0, y: 20}
+  stopoverPinEulerRangeZ: {x: 0, y: -20}
 --- !u!1 &5250991721481464301
 GameObject:
   m_ObjectHideFlags: 0

@@ -11554,16 +11554,20 @@ MonoBehaviour:
   TargetedNode: {fileID: 0}
   startNode: {fileID: 0}
   previewRoute:
-    StartFuel: 0
-    Waypoints: []
+    <RouteName>k__BackingField: 
+    <StartFuel>k__BackingField: 0
+    <Waypoints>k__BackingField: []
+    <FurthestLegalWaypoint>k__BackingField:
+      NodeName: 
+      <Node>k__BackingField: {fileID: 0}
   routeSegments: []
   Route:
-    rid: -2
-  references:
-    version: 2
-    RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
+    <RouteName>k__BackingField: 
+    <StartFuel>k__BackingField: 0
+    <Waypoints>k__BackingField: []
+    <FurthestLegalWaypoint>k__BackingField:
+      NodeName: 
+      <Node>k__BackingField: {fileID: 0}
 --- !u!1 &1614698746
 GameObject:
   m_ObjectHideFlags: 0

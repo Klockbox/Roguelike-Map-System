@@ -58,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4553569656502901658, guid: 9636ec3a0c4de0b4c9404157c37e6249, type: 3}
       propertyPath: m_Name
-      value: CombatNodeInher
+      value: CombatNode
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -208,18 +208,12 @@ public class Node : MonoBehaviour, IClickableObject
     [Button]
     private void CycleTargeting()
     {
-        switch (CurrentTargetState)
+        CurrentTargetState = CurrentTargetState switch
         {
-            case TargetState.NotTargeted:
-                CurrentTargetState = TargetState.Waypoint;
-                break;
-            case TargetState.Waypoint:
-                CurrentTargetState = TargetState.Targeted;
-                break;
-            case TargetState.Targeted:
-                CurrentTargetState = TargetState.NotTargeted;
-                break;
-        }
+            TargetState.NotTargeted => TargetState.Targeted,
+            TargetState.Targeted => TargetState.NotTargeted,
+            _ => CurrentTargetState
+        };
     }
     
     [Button]
@@ -291,12 +285,10 @@ public enum RoutingState : byte
 
 /// <summary>
 /// <see cref="NotTargeted"/>,
-/// <see cref="Waypoint"/>,
 /// <see cref="Targeted"/>,
 /// </summary>
 public enum TargetState : byte
 {
     NotTargeted,
-    Waypoint,
     Targeted
 }

@@ -9,6 +9,8 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 {
     [SerializeField] private PlayerMini playerMini;
 
+    [SerializeField] private MapMove nextMove = new ();
+    
     [SerializeField, ReadOnly, BoxGroup("Game State")] 
     private MapState _currentMapState = MapState.Travel;
     public MapState CurrentMapState
@@ -17,7 +19,6 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         set
         {
             _currentMapState = value;
-            UpdateHoverPreview();
         }
     }
 
@@ -62,9 +63,6 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     public static event Action<Node> UpdatedPlayerNode;
     
     [field: SerializeField, ReadOnly, BoxGroup("Move")] public Node HoveredNode { get; private set; }
-    [field: SerializeField, ReadOnly, BoxGroup("Move")] public Node TargetedNode { get; private set; }
-    [field: SerializeField, ReadOnly, BoxGroup("Move")] public bool LegalMove { get; private set; }
-    [field: SerializeField, ReadOnly, BoxGroup("Move")] public int TargetMoveCost { get; private set; }
     public static event Action<int> OnFuelChanged;
     public static event Action<int> MovePreviewChanged;
 
@@ -100,18 +98,21 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     private void OnEnable()
     {
         Node.NodeClicked += OnNodeClicked;
-        Node.AnyNodeHoverChanged += OnHoveringChanged;
         
-        PlayerMini.PlayerStartedMove += OnPlayerStartMoving;
+        RouteManager.DeterminedNewMove += OnMoveUpdated;
+        
         PlayerMini.PlayerReachedNode += OnPlayerReachedNode;
     }
-    
+
+    private void OnMoveUpdated(MapMove newMove)
+    {
+        nextMove = newMove;
+    }
+
     private void OnDisable()
     {
         Node.NodeClicked -= OnNodeClicked;
-        Node.AnyNodeHoverChanged -= OnHoveringChanged;
         
-        PlayerMini.PlayerStartedMove -= OnPlayerStartMoving;
         PlayerMini.PlayerReachedNode -= OnPlayerReachedNode;
     }
 
@@ -133,10 +134,6 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         CalculateCostsToLeave();
     }
 
-    private void OnPlayerStartMoving()
-    {
-        UpdateHoverPreview();
-    }
 
     private void OnPlayerReachedNode(Node node)
     {
@@ -150,7 +147,6 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
             EncounterManager.Instance.StartEncounter(node.GetEncounter());
         }
         MarkNeighbors(true);
-        UpdateHoverPreview();
     }
 
     
@@ -207,32 +203,17 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         foreach (Waypoint waypoint in waypointsToLeave.Values)
             waypoint.Node.SetCost(waypoint.LowestMoveCost, ECostType.CostToLeave);
     }
-
-    private void OnHoveringChanged(Node hoveredNode)
-    {
-        HoveredNode = hoveredNode;
-        UpdateHoverPreview();
-    }
-
-    private void UpdateHoverPreview()
-    {
-        return;
-    }
+    
 
     private void OnNodeClicked(Node clickedNode)
     {
-        if (!LegalMove
-            || !CurrentlyAcceptingInput()
-            || !Connector.TryGetConnector(PlayerNode, TargetedNode, out Connector _))
-        {
-            return;
-        } 
+        if (!nextMove.IsValid || !CurrentlyAcceptingInput()) return; 
         
         MarkNeighbors(false);
         
-        PlayerNode = RouteManager.Instance.TargetedNode;
-        CurrentFuel -= TargetMoveCost;
-        PlayerMini.Instance.MoveToNode(TargetedNode);
+        PlayerNode = nextMove.TargetedNode;
+        CurrentFuel -= nextMove.MoveCost;
+        PlayerMini.Instance.MoveToNode(PlayerNode);
     }
 
     private void MarkNeighbors(bool isNeighbor)
@@ -245,7 +226,15 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     }
 }
 
-
+[Serializable]
+public class MapMove
+{
+    public bool IsValid => TargetedNode && StartNode && IsLegal;
+    public bool IsLegal;
+    public Node TargetedNode;
+    public Node StartNode;
+    public int MoveCost;
+}
 
 public enum ECostType
 {
