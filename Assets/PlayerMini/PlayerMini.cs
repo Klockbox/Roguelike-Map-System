@@ -6,29 +6,36 @@ using UnityEngine;
 
 public class PlayerMini : SimpleMonoBehaviorSingleton<PlayerMini>
 {
-    public static bool IsMoving { get; private set; }
-
-    public static event Action PlayerStartedMove; 
-    public static event Action<Node> PlayerReachedNode; 
+    private static bool s_isMoving;
+    public static bool IsMoving
+    {
+        get => s_isMoving;
+        private set
+        {
+            s_isMoving = value;
+            MapManager.UpdateMapInteractability();
+        } 
+    }
     
+    public static event Action PlayerMiniReachedCurrentNode;
+
     public void MoveToNode(Node newNode)
     {
-        IsMoving = true;
-        PlayerStartedMove?.Invoke();
-        StartCoroutine(MovePlayer(newNode));
         transform.rotation = Quaternion.LookRotation((newNode.transform.position - transform.position).normalized, Vector3.up);
+        StartCoroutine(MovePlayer(newNode, () => SetMiniToNode(newNode) ));
     }
 
-    private IEnumerator MovePlayer(Node node)
+    private IEnumerator MovePlayer(Node node, Action callbackOnArrival)
     {
+        IsMoving = true;
         yield return transform.DOMove(node.transform.position, 2).WaitForCompletion();
         IsMoving = false;
-        SetToNode(node);
+        callbackOnArrival?.Invoke();
     }
 
-    public void SetToNode(Node node)
+    public void SetMiniToNode(Node node)
     {
         transform.position = node.transform.position;
-        PlayerReachedNode?.Invoke(node);
+        PlayerMiniReachedCurrentNode?.Invoke();
     }
 }

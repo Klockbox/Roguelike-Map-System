@@ -9,26 +9,59 @@ public class Node : MonoBehaviour, IClickableObject
 {
     //###############| static class behavior |###############
     #region static management
-    public static List<Node> s_Nodes = new List<Node>();
-    public static List<Node> s_ExitNodes = new List<Node>();
+    public static List<Node> s_allNodes = new List<Node>();
+    
+    public static Node s_ExitNode = null;
 
     public static List<Node> AllNodesExcept(List<Node> nodesToExclude)
     {
-        if (nodesToExclude == null) return s_Nodes;
-        return s_Nodes.Except(nodesToExclude).ToList();
+        if (nodesToExclude == null) return s_allNodes;
+        return s_allNodes.Except(nodesToExclude).ToList();
     }
     
     public static event Action<Node> NodeClicked;
-    public static event Action<Node> NodeRightClicked;
     public static event Action<Node> AnyNodeHoverChanged;
+
+    public static Dictionary<Node, Waypoint> CurrentMapFromPlayer = new();
+    public static Dictionary<Node, Waypoint> CurrentMapFromExit = new();
+    
+    public static void UpdateCostToReach(Node currentPlayerNode) => UpdateDijkstraCost(currentPlayerNode, ECostType.CostToReach);
+     
+    public static void UpdateCostToLeave() => UpdateDijkstraCost(s_ExitNode, ECostType.CostToLeave);
+    
+    private static void UpdateDijkstraCost(Node nodeToCheckFrom, ECostType costType)
+    {
+        Dictionary<Node, Waypoint> dijkstraMap = DijkstraUtility.CalculateDijkstra(s_allNodes, nodeToCheckFrom);
+        
+        switch (costType)
+        {
+            default:
+            case ECostType.CostToReach:
+                CurrentMapFromPlayer = dijkstraMap;
+                break;
+            case ECostType.CostToLeave:
+                CurrentMapFromExit = dijkstraMap;
+                break;
+        }
+
+        foreach (Node node in s_allNodes) // set node state according to reachability
+            node.UpdateNodeState();
+    }
+
+    public static void UpdateNodeInteractability(bool isInteractable)
+    {
+        foreach (Node node in s_allNodes)
+            node.IsInteractable = isInteractable;
+    }
+    
     #endregion
     
     //###############| instanced class behavior |###############
     [Header("References")]
     [SerializeField]
     private MeshRenderer visual;
-    
-    public bool IsExit
+
+    private bool IsExit
     {
         get
         {
@@ -36,9 +69,9 @@ public class Node : MonoBehaviour, IClickableObject
             return encounterNode != null && encounterNode.IsExit();
         }
     }
-    
-    [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToReach { get; private set; } = int.MaxValue;
-    [field: SerializeField, ReadOnly, BoxGroup("Info")] public int CostToLeave { get; private set; } = int.MaxValue;
+
+    public int CostToReach => CurrentMapFromPlayer.ContainsKey(this) ? CurrentMapFromPlayer[this].LowestMoveCost : int.MaxValue;
+    public int CostToLeave => CurrentMapFromExit.ContainsKey(this) ? CurrentMapFromExit[this].LowestMoveCost : int.MaxValue;
     public int TotalCost => CostToLeave + CostToReach;
     
     // relay
@@ -46,6 +79,19 @@ public class Node : MonoBehaviour, IClickableObject
     
     // Node State Info
     #region NodeState
+    
+    [field: SerializeField, ReadOnly, BoxGroup("Info")]
+    private NodeState _currentNodeState = NodeState.InReach;
+    public NodeState CurrentNodeState
+    {
+        get => _currentNodeState;
+        private set
+        {
+            _currentNodeState = value;
+            NodeStateChanged?.Invoke();
+        } 
+    }
+    
     public event Action NodeStateChanged;
 
     [field: SerializeField, ReadOnly, BoxGroup("Info")]
@@ -72,17 +118,18 @@ public class Node : MonoBehaviour, IClickableObject
         }
     }
     
-    [field: SerializeField, ReadOnly, BoxGroup("Info")]
-    private NodeState _currentNodeState = NodeState.InReach;
-    public NodeState CurrentNodeState
+    private bool _interactable = true;
+    public bool IsInteractable
     {
-        get => _currentNodeState;
+        get => _interactable;
         private set
         {
-            _currentNodeState = value;
+            _interactable = value;
             NodeStateChanged?.Invoke();
-        } 
+        }
     }
+    
+    
     
     [field: SerializeField, ReadOnly, BoxGroup("Info")]
     private RoutingState _currentRoutingState = RoutingState.NotOnRoute;
@@ -148,28 +195,29 @@ public class Node : MonoBehaviour, IClickableObject
     
     private void OnEnable()
     {
-        s_Nodes.Add(this);
-        if (IsExit) s_ExitNodes.Add(this);
+        s_allNodes.Add(this);
+        
+        if (!IsExit) return;
+        
+        if (s_ExitNode is null) 
+            s_ExitNode = this;
+        else
+        {
+            Debug.LogWarning("Currently only support one exit node.");
+            Destroy(gameObject);
+        }
     }
 
     private void OnDisable()
     {
-        s_Nodes.Remove(this);
-        if (IsExit) s_ExitNodes.Remove(this);
+        s_allNodes.Remove(this);
+
+        if (s_ExitNode == this)
+            s_ExitNode = null;
     }
 
-    public void SetCost(int newCost, ECostType type)
+    private void UpdateNodeState()
     {
-        switch (type)
-        {
-            case ECostType.CostToReach:
-                CostToReach = newCost;
-                break;
-            case ECostType.CostToLeave:
-                CostToLeave = newCost;
-                break;
-        }
-        
         CurrentNodeState = TotalCost <= MapManager.CurrentFuel ? NodeState.InReach : NodeState.OutOfReach;
     }
     
@@ -228,10 +276,7 @@ public class Node : MonoBehaviour, IClickableObject
         NodeClicked?.Invoke(this);
     }
     
-    public void OnAltClickUp()
-    {
-        NodeRightClicked?.Invoke(this);
-    }
+    
 
     public void OnHoverStart()
     {
@@ -258,6 +303,7 @@ public class Node : MonoBehaviour, IClickableObject
     }
     
     #region UnusedInterface
+    public void OnAltClickUp() { }
     public void OnPointerDown() { }
     public void OnPointerHold() { }
     public void OnPointerUp() { }

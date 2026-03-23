@@ -94,17 +94,12 @@ public class NodeVisual : MonoBehaviour
             true => new Vector3(1, 0.2f, 1),
             false => new Vector3(1, 1, 1)
         };
-        
-        switch (node.CurrentTargetState)
+
+        scaleOffset_TargetState = node.CurrentTargetState switch
         {
-            default:
-            case TargetState.NotTargeted:
-                scaleOffset_TargetState = Vector3.one;
-                break;
-            case TargetState.Targeted:
-                scaleOffset_TargetState = Vector3.one * 2f;
-                break;
-        }
+            TargetState.Targeted when node.IsInteractable => Vector3.one * 1.6f,
+            _ => Vector3.one
+        };
     }
 
     private void OnStopoverStateChanged(bool isStopover)
@@ -131,6 +126,14 @@ public class NodeVisual : MonoBehaviour
             _ => baseColor
         };
 
+        if (node.IsInteractable)
+            UpdateColorForInteractable();
+        
+        meshRenderer.material.color = baseColor;
+    }
+
+    private void UpdateColorForInteractable()
+    {
         if (node.Hovered)
         {
             baseColor = ColorUtility.NegativeMultiplyBlend(baseColor, highlightColor, 0.4f);
@@ -141,7 +144,7 @@ public class NodeVisual : MonoBehaviour
             TweenerCore<Vector3, Vector3[], Vector3ArrayOptions> punchTween = DOTween.Punch(() => scaleOffset_HoverFeedback, x => scaleOffset_HoverFeedback = x, Vector3.one * 0.2f, 0.5f);
             onHoverTween.Append(punchTween);
         }
-        
+
         if (node.CurrentRoutingState is RoutingState.Marked)
         {
             baseColor = node.CurrentNodeState switch
@@ -151,8 +154,6 @@ public class NodeVisual : MonoBehaviour
                 _ => idleColor
             };
         }
-        
-        meshRenderer.material.color = baseColor;
     }
 
     private void Update()

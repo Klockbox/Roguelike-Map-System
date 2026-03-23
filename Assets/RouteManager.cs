@@ -1,15 +1,32 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NaughtyAttributes;
 using UnityEngine;
 
 [Serializable]
 public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
 {
+    [field: SerializeField, ReadOnly]
+    private ERoutingMode _currentRoutingMode = ERoutingMode.Freeform;
+
+    public ERoutingMode CurrentRoutingMode
+    {
+        get => _currentRoutingMode;
+        private set
+        {
+            _currentRoutingMode = value;
+            RoutingModeChanged?.Invoke(_currentRoutingMode);
+        }
+    }
+
+    public static event Action<ERoutingMode> RoutingModeChanged;
+    
     public static event Action<MapMove> DeterminedNewMove;
     
+    
     [SerializeField] private Node startNode;
-    private Dictionary<Node, Waypoint> startMap;
+    private Dictionary<Node, Waypoint> StartMap => Node.CurrentMapFromPlayer;
     private int FuelAtStart => MapManager.CurrentFuel;
     
     private Node previewNode;
@@ -29,14 +46,15 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
     
     private Dictionary<Node, Waypoint> GetLatestPlannedMapStage()
     {
-        return RoutePlanned ? LastPlannedRoute.DijkstraMapFromDestination : startMap; // else return map stage
+        return RoutePlanned ? LastPlannedRoute.DijkstraMapFromDestination : StartMap; // else return map stage
     }
     
     private bool RoutePlanned => routeSegments is { Count: > 0 };
-    
-    private Node FurthestStopoverNode => RoutePlanned ? SegmentStopoverNodes[^1] : null;
-    private List<Node> SegmentStopoverNodes => routeSegments.Select(x => x.DestinationNode).ToList();
-    private List<Waypoint> SegmentStopovers => routeSegments.Select(x => x.DestinationWaypoint).ToList();
+
+    private Route CurrentRouteSegment => RoutePlanned ? routeSegments[0] : null;
+    private Route FurthestRouteSegment => RoutePlanned ? routeSegments[^1] : null;
+    private Node NextStopoverNode => CurrentRouteSegment?.DestinationNode;
+    private Node FurthestStopoverNode => FurthestRouteSegment?.DestinationNode;
     
     [SerializeField]
     private List<Route> routeSegments = new();
@@ -75,6 +93,19 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
         UpdateRoute();
     }
     
+    private void OnPlayerNodeUpdated(Node newPlayerNode)
+    {
+        if (CurrentRoutingMode is ERoutingMode.Planning)
+        {
+            CurrentRouteSegment.AdvanceRoute(out bool routeDone);
+            if(routeDone)
+                RemoveCurrentRouteSegment();
+        }
+        
+        startNode = newPlayerNode;
+        UpdateRoute();
+    }
+    
     private void OnRightClick(IClickableObject rightClickedObject)
     {
         switch (rightClickedObject)
@@ -107,6 +138,21 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
     {
         routeSegments.Add(previewRoute);
         previewRoute.DestinationNode.IsStopover = true;
+
+        if (routeSegments.Count == 1) // only when adding first
+            CurrentRoutingMode = ERoutingMode.Planning;
+        
+        UpdateRoute();
+    }
+    
+    private void RemoveCurrentRouteSegment()
+    {
+        CurrentRouteSegment.DestinationNode.IsStopover = false;
+        routeSegments.RemoveAt(0);
+        
+        if(routeSegments.Count == 0) // only when removing last
+            CurrentRoutingMode = ERoutingMode.Freeform;
+        
         UpdateRoute();
     }
     
@@ -114,6 +160,10 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
     {
         routeSegments[^1].DestinationNode.IsStopover = false;
         routeSegments.RemoveAt(routeSegments.Count - 1);
+        
+        if(routeSegments.Count == 0) // only when removing last
+            CurrentRoutingMode = ERoutingMode.Freeform;
+        
         UpdateRoute();
     }
 
@@ -123,6 +173,8 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
             segment.DestinationNode.IsStopover = false;
         
         routeSegments.Clear();
+        CurrentRoutingMode = ERoutingMode.Freeform;
+        
         UpdateRoute();
     }
     
@@ -135,15 +187,16 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
             previewRoute = null;
 
         Route = CreateCompleteRoute();
-        EvaluateRoute(Route);
+        DetermineNewMove(Route);
+        EvaluateOutOfReachFromDestination(Route);
+        
+        if(CurrentlyAllowingPreview())
+            EvaluateRoute(Route);
+        else
+            UnmarkAllMapElements();
     }
 
-    private void OnPlayerNodeUpdated(Node newPlayerNode)
-    {
-        startNode = newPlayerNode;
-        startMap = DijkstraUtility.CalculateDijkstra(Node.s_Nodes, startNode);
-    }
-    
+    private bool CurrentlyAllowingPreview() { return !PlayerMini.IsMoving && MapManager.Instance.CurrentMapState is MapState.Travel; }
     
     private void ConstructPreviewRouteSegment()
     {
@@ -159,7 +212,7 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
             ? new List<Waypoint> { new(previewNode, connectorToNeighbor.MoveCost, NodeToCheckPreviewFrom) }
             : DijkstraUtility.GetRouteBetweenTwoPointsOnMap(GetLatestPlannedMapStage(), NodeToCheckPreviewFrom, previewNode);
         
-        Dictionary<Node, Waypoint> dijkstraMapFromDestination = DijkstraUtility.CalculateDijkstra(Node.s_Nodes, previewNode);
+        Dictionary<Node, Waypoint> dijkstraMapFromDestination = DijkstraUtility.CalculateDijkstra(Node.s_allNodes, previewNode);
         
         // Write dijkstra route as list
         previewRoute = new Route(FuelToCheckPreviewFrom, waypointsToDestination, dijkstraMapFromDestination);
@@ -176,7 +229,7 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
         // when no route, don't evaluate
         if(segmentedRoute.Count < 1)
         {
-            return new Route(MapManager.CurrentFuel, new List<Waypoint>(), startMap);
+            return new Route(MapManager.CurrentFuel, new List<Waypoint>(), StartMap);
         }
         
         int costOffset = 0;
@@ -195,31 +248,33 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
             }
         }
 
-        Dictionary<Node, Waypoint> dijkstraMapFromDestination = DijkstraUtility.CalculateDijkstra(Node.s_Nodes, combinedRoute[^1].Node);
+        Dictionary<Node, Waypoint> dijkstraMapFromDestination = DijkstraUtility.CalculateDijkstra(Node.s_allNodes, combinedRoute[^1].Node);
 
         return new Route(MapManager.CurrentFuel, combinedRoute, dijkstraMapFromDestination);
     }
 
     private void EvaluateRoute(Route route)
     {
-        MapMove move = new();
-
-        move.TargetedNode = route?.NextNode;
-        move.StartNode = startNode;
-        move.MoveCost = route != null && route.ConnectorToNextNode != null ? route.ConnectorToNextNode.MoveCost : -1;
-        move.IsLegal = route != null && route.ConnectorToNextNode != null &&
-                       route.ConnectorToNextNode.MoveCost + route.NextNode.CostToLeave <= route.StartFuel;
-        
-        DeterminedNewMove?.Invoke(move);
-        
         MarkNodeAndConnectorStatesOnRoute(route);
-
-        EvaluateOutOfReachFromDestination(route);
         
         UnmarkAllMapElementsNotOnRoute(route);
     }
 
-    
+    private void DetermineNewMove(Route route)
+    {
+        MapMove move = new()
+        {
+            TargetedNode = route?.NextNode,
+            StartNode = startNode,
+            MoveCost = route != null && route.ConnectorToNextNode ? route.ConnectorToNextNode.MoveCost : -1,
+            IsLegal = route != null && route.ConnectorToNextNode &&
+                      route.ConnectorToNextNode.MoveCost + route.NextNode.CostToLeave <= route.StartFuel
+        };
+
+        DeterminedNewMove?.Invoke(move);
+    }
+
+
     private static void MarkNodeAndConnectorStatesOnRoute(Route route)
     {
         foreach (Waypoint waypoint in route.Waypoints)
@@ -244,8 +299,10 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
     {
         foreach (Waypoint waypointFromDestination in route.DijkstraMapFromDestination.Values)
         {
-            waypointFromDestination.Node.PreviewingOutOfReach =
-                waypointFromDestination.LowestMoveCost + waypointFromDestination.Node.CostToLeave > route.FuelAtDestination;
+            bool inReach = waypointFromDestination.Node.CurrentNodeState is NodeState.InReach;
+            int totalCost = waypointFromDestination.LowestMoveCost + waypointFromDestination.Node.CostToLeave;
+            
+            waypointFromDestination.Node.PreviewingOutOfReach = totalCost > route.FuelAtDestination && inReach;
         }
     }
     
@@ -264,6 +321,22 @@ public class RouteManager : SimpleMonoBehaviorSingleton<RouteManager>
             connector.SetConnectorRouteState(ConnectorState.Idle);
         }
     }
+    
+    private static void UnmarkAllMapElements()
+    {
+        // unmark all nodes not on route
+        foreach (Node node in Node.s_allNodes)
+        {
+            node.CurrentRoutingState = RoutingState.NotOnRoute;
+            node.CurrentTargetState = TargetState.NotTargeted;
+        }
+
+        // unmark all connectors not on route
+        foreach (Connector connector in Connector.s_allConnectors)
+        {
+            connector.SetConnectorRouteState(ConnectorState.Idle);
+        }
+    }
 }
 
 [Serializable]
@@ -274,6 +347,7 @@ public class Route
     
     [field: SerializeField]
     public int StartFuel { get; private set; }
+    
     [field: SerializeField]
     public List<Waypoint> Waypoints { get; private set; }
     public Dictionary<Node, Waypoint> DijkstraMapFromDestination { get; private set; }
@@ -300,6 +374,34 @@ public class Route
         }
     }
 
+    // TODO: Rework route advancement
+    // this is not good. I'd like to have this more closely synchronized to the actual move commands.
+    // I think generating moves here is a mistake. the route manager should generate a next route before the
+    // map manager grabs that and tries to work it into a legal move. only when that is successful should the route be updated.
+    public void AdvanceRoute(out bool routeDone)
+    {
+        if (!ContainsRoute || Waypoints.Count <= 1)
+        {
+            routeDone = true;
+            return ;
+        }
+
+        Waypoint reachedWaypoint = NextWaypoint;
+        int costsToSubtract = reachedWaypoint.LowestMoveCost;
+        Waypoints.RemoveAt(0);
+        
+        if (!ContainsRoute)
+        {
+            routeDone = true;
+            return ;
+        }
+
+        routeDone = false;
+        StartFuel -= costsToSubtract;
+        foreach (Waypoint waypoint in Waypoints)
+            waypoint.OverrideMoveCost(waypoint.LowestMoveCost - costsToSubtract);
+    }
+
     public List<Node> RouteNodes => Waypoints.Select(wp => wp.Node).ToList();
     public List<Connector> RouteConnectors => Waypoints.Select(c => c.Connection).ToList();
     
@@ -315,4 +417,10 @@ public class Route
 
         RouteName = ContainsRoute ? $"Route from |{StartNode.name}| to |{DestinationNode.name}| for {SegmentFuelCost}" : "Incomplete Route";
     }
+}
+
+public enum ERoutingMode
+{
+    Freeform,
+    Planning
 }

@@ -7,13 +7,13 @@ public class FuelCounter : Counter
     private protected override void Subscribe()
     {
         MapManager.OnFuelChanged += ChangeCounter;
-        MapManager.MovePreviewChanged += OnMovePreviewChanged;
+        //MapManager.MovePreviewChanged += OnMovePreviewChanged;
     }
 
     private protected override void Unsubscribe()
     {
         MapManager.OnFuelChanged -= ChangeCounter;
-        MapManager.MovePreviewChanged -= OnMovePreviewChanged;
+        //MapManager.MovePreviewChanged -= OnMovePreviewChanged;
     }
     
     private void OnMovePreviewChanged(int previewMoveCosts)

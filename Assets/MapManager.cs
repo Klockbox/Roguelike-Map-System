@@ -9,7 +9,25 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 {
     [SerializeField] private PlayerMini playerMini;
 
-    [SerializeField] private MapMove nextMove = new ();
+    [SerializeField] private bool debug_SkipEncounter;
+    
+    [SerializeField, ReadOnly, BoxGroup("Move"), AllowNesting]
+    private MapMove nextMove = new ();
+    
+    [SerializeField, BoxGroup("Move")]
+    private Node _playerNode;
+    public Node PlayerNode
+    {
+        get => _playerNode;
+        set
+        {
+            _playerNode = value;
+            UpdatedPlayerNode?.Invoke(_playerNode);
+        }
+    }
+    public static event Action<Node> UpdatedPlayerNode;
+
+    private static MapState s_mapState => Instance ? Instance.CurrentMapState : MapState.Travel;
     
     [SerializeField, ReadOnly, BoxGroup("Game State")] 
     private MapState _currentMapState = MapState.Travel;
@@ -19,8 +37,25 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         set
         {
             _currentMapState = value;
+            MapManager.UpdateMapInteractability();
         }
     }
+
+    #region Map Interactability
+
+    public static bool MapIsInteractable { get; private set; } = true;
+    public static void UpdateMapInteractability()
+    {
+        bool prevValue = MapIsInteractable;
+        MapIsInteractable = s_mapState is MapState.Travel && !PlayerMini.IsMoving;
+        if(MapIsInteractable != prevValue)
+            MapInteractabilityChanged?.Invoke(MapIsInteractable);
+    }
+    public static event Action<bool> MapInteractabilityChanged;
+
+    #endregion
+    
+    
 
     [SerializeField, ReadOnly, BoxGroup("Game State")]
     private int _pointScore;
@@ -47,24 +82,8 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         } 
     }
     public static event Action<int> MoneyChanged;
-
-    [SerializeField, BoxGroup("Move")]
-    private Node _playerNode;
-    public Node PlayerNode
-    {
-        get => _playerNode;
-        set
-        {
-            _playerNode = value;
-            UpdatedPlayerNode?.Invoke(_playerNode);
-            CalculateCostsToReach();
-        }
-    }
-    public static event Action<Node> UpdatedPlayerNode;
     
-    [field: SerializeField, ReadOnly, BoxGroup("Move")] public Node HoveredNode { get; private set; }
     public static event Action<int> OnFuelChanged;
-    public static event Action<int> MovePreviewChanged;
 
     
     
@@ -77,31 +96,21 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
         {
             if(!Instance) return;
             Instance.currentFuel = value;
-            Instance.CalculateCostsToReach();
             OnFuelChanged?.Invoke(value);
         }
-    }
-
-    private Dictionary<Node, Waypoint> dijkstraRoutesFromPlayer = new();
-    private Dictionary<Node, Waypoint> waypointsToLeave = new();
-    
-    private bool CurrentlyAcceptingInput()
-    {
-        return !PlayerMini.IsMoving;
-    }
-    
-    private bool CurrentlyAllowingPreview()
-    {
-        return !PlayerMini.IsMoving && CurrentMapState is MapState.Travel;
     }
     
     private void OnEnable()
     {
         Node.NodeClicked += OnNodeClicked;
+
+        UpdatedPlayerNode += Node.UpdateCostToReach;
+        MapInteractabilityChanged += Node.UpdateNodeInteractability;
+        MapInteractabilityChanged += Connector.SetInteractable;
         
         RouteManager.DeterminedNewMove += OnMoveUpdated;
         
-        PlayerMini.PlayerReachedNode += OnPlayerReachedNode;
+        PlayerMini.PlayerMiniReachedCurrentNode += OnPlayerMiniReachedCurrentNode;
     }
 
     private void OnMoveUpdated(MapMove newMove)
@@ -112,8 +121,8 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     private void OnDisable()
     {
         Node.NodeClicked -= OnNodeClicked;
-        
-        PlayerMini.PlayerReachedNode -= OnPlayerReachedNode;
+        MapInteractabilityChanged = null;
+        PlayerMini.PlayerMiniReachedCurrentNode -= OnPlayerMiniReachedCurrentNode;
     }
 
     [Button]
@@ -126,94 +135,50 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
     private void Start()
     {
         CurrentFuel = startingFuel;
+        Node.UpdateCostToLeave();
+        
         Money = 0;
         PointScore = 0;
-        PlayerNode = PlayerNode;
+        
+        
         PlayerNode.Visited = true;
-        playerMini.SetToNode(PlayerNode);
-        CalculateCostsToLeave();
+        TeleportPlayer(PlayerNode);
     }
 
 
-    private void OnPlayerReachedNode(Node node)
+    private void OnPlayerMiniReachedCurrentNode()
     {
-        if (node.Visited)
-        {
-            // do nothing ?
-        }
-        else
-        {
-            node.Visited = true;
-            EncounterManager.Instance.StartEncounter(node.GetEncounter());
-        }
+        if (!PlayerNode.Visited && !debug_SkipEncounter)
+            EncounterManager.Instance.StartEncounter(PlayerNode.GetEncounter());
+        
+        PlayerNode.Visited = true;
+        
         MarkNeighbors(true);
     }
-
     
-    private static Dictionary<Node, Waypoint> CalculateDijkstra(Node startingNode)
-    {
-        // set up dict table
-        Dictionary<Node, Waypoint> waypoints = Node.s_Nodes.ToDictionary(node => node, node => new Waypoint(node, int.MaxValue, null));
-
-        // set up starting node
-        waypoints[startingNode].OverrideMoveCost(0); // no dist because we are already there
-        
-        List<Waypoint> unvisitedWaypoints = waypoints.Values.ToList();
-        
-        for (int i = 0; i < waypoints.Count; i++)
-        {
-            // grab closest waypoint
-            Waypoint closestWaypoint = unvisitedWaypoints[0];
-            foreach (Waypoint waypointToCheck in unvisitedWaypoints)
-                if (waypointToCheck.LowestMoveCost < closestWaypoint.LowestMoveCost) 
-                    closestWaypoint = waypointToCheck;
-            
-            //set base move cost for next check
-            int baseMovementCost = closestWaypoint.LowestMoveCost;
-            
-            // iterate through connections and update lowest costs if applicable
-            List<Connector> connections = Connector.GetAllConnectorsFrom(closestWaypoint.Node);
-            foreach (Connector connection in connections)
-            {
-                Node connectedNode = connection.GetOther(closestWaypoint.Node);
-                Waypoint waypoint = waypoints[connectedNode];
-                int totalCostToConnectedNode = baseMovementCost + connection.MoveCost;
-                
-                if (totalCostToConnectedNode >= waypoint.LowestMoveCost) continue;
-                waypoint.SetBetterPreviousNode(closestWaypoint.Node, totalCostToConnectedNode);
-            }
-            unvisitedWaypoints.Remove(closestWaypoint);
-        }
-        
-        return waypoints;
-    }
-    
-    private void CalculateCostsToReach()
-    {
-        dijkstraRoutesFromPlayer = CalculateDijkstra(PlayerNode);
-        
-        // write values to node objects
-        foreach (Waypoint waypoint in dijkstraRoutesFromPlayer.Values)
-            waypoint.Node.SetCost(waypoint.LowestMoveCost, ECostType.CostToReach);
-    } 
-    private void CalculateCostsToLeave()
-    {
-        waypointsToLeave = CalculateDijkstra(Node.s_ExitNodes[0]);
-        // write values to node objects
-        foreach (Waypoint waypoint in waypointsToLeave.Values)
-            waypoint.Node.SetCost(waypoint.LowestMoveCost, ECostType.CostToLeave);
-    }
-    
-
     private void OnNodeClicked(Node clickedNode)
     {
-        if (!nextMove.IsValid || !CurrentlyAcceptingInput()) return; 
+        MovePlayer();
+    }
+
+    public void MovePlayer()
+    {
+        if (!nextMove.IsValid || !MapIsInteractable) return;
         
         MarkNeighbors(false);
-        
-        PlayerNode = nextMove.TargetedNode;
+
         CurrentFuel -= nextMove.MoveCost;
+        PlayerNode = nextMove.TargetedNode;
+        
         PlayerMini.Instance.MoveToNode(PlayerNode);
+    }
+    
+    private void TeleportPlayer(Node toNode)
+    {
+        MarkNeighbors(false);
+        
+        PlayerNode = toNode;
+        PlayerMini.Instance.SetMiniToNode(PlayerNode);
     }
 
     private void MarkNeighbors(bool isNeighbor)

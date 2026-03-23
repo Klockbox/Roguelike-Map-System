@@ -17,6 +17,7 @@ public class EncounterManager : SimpleMonoBehaviorSingleton<EncounterManager>
     private void Start()
     {
         encounterScreenBackground.alpha = 0;
+        encounterScreenBackground.blocksRaycasts = false;
     }
 
     [Button]
@@ -43,12 +44,15 @@ public class EncounterManager : SimpleMonoBehaviorSingleton<EncounterManager>
         currentMapEncounter = Instantiate(mapEncounter, encounterUIRoot.transform); // spawn panel
         currentMapEncounter.Close += EndMapEncounter; // listen to end event
         
+        encounterScreenBackground.blocksRaycasts = true;
         StartCoroutine(FadeEncounterBackground(0, 1, 0.5f));
     }
     
     public void EndMapEncounter()
     {
         currentMapEncounter.Close -= EndMapEncounter;
+        
+        encounterScreenBackground.blocksRaycasts = false;
         StartCoroutine(EndEncounterCoroutine());
     }
 

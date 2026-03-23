@@ -10,20 +10,31 @@ public class Connector : MonoBehaviour
 {
     //###############| static class behavior |###############
     #region static class behavior
-    public static List<Connector> s_Connectors = new List<Connector>();
+    public static List<Connector> s_allConnectors = new List<Connector>();
     public static List<Connector> AllConnectorsExcept(List<Connector> connectorsToExclude)
     {
-        if (connectorsToExclude == null) return s_Connectors;
-        return s_Connectors.Except(connectorsToExclude).ToList();
+        if (connectorsToExclude == null) return s_allConnectors;
+        return s_allConnectors.Except(connectorsToExclude).ToList();
     }
-    public static List<Connector> GetAllConnectorsFrom(Node node) => s_Connectors.Where(connector => connector.Connects(node)).ToList();
+    public static List<Connector> GetAllConnectorsFrom(Node node) => s_allConnectors.Where(connector => connector.Connects(node)).ToList();
     public static List<Node> GetAllConnectedNodesOf(Node node) => GetAllConnectorsFrom(node).Select(c => c.GetOther(node)).ToList();
 
     public static bool TryGetConnector(Node nodeA, Node nodeB, out Connector connector)
     {
-        connector = s_Connectors.FirstOrDefault(c => c.Connects(nodeA) && c.Connects(nodeB));
+        connector = s_allConnectors.FirstOrDefault(c => c.Connects(nodeA) && c.Connects(nodeB));
         return connector != null;
     }
+
+    private static bool areInteractable = true;
+
+    public static void SetInteractable(bool value)
+    {
+        areInteractable = value;
+        foreach (Connector connector in s_allConnectors)
+            connector.UpdateConnectorState();
+    }
+    
+    
     #endregion
 
     
@@ -42,12 +53,21 @@ public class Connector : MonoBehaviour
 
     [SerializeField, ReadOnly]
     private ConnectorState currentConnectorState = ConnectorState.Idle;
-    
+    private int routeCost;
 
-    public void SetConnectorRouteState(ConnectorState newState, int routeCost = 0)
+    public void SetConnectorRouteState(ConnectorState newState, int cost = 0)
     {
         currentConnectorState = newState;
-        HighlightStateChanged?.Invoke(currentConnectorState, routeCost);
+        routeCost = cost;
+        UpdateConnectorState();
+    }
+
+    private void UpdateConnectorState()
+    {
+        if(areInteractable)
+            HighlightStateChanged?.Invoke(currentConnectorState, routeCost);
+        else
+            HighlightStateChanged?.Invoke(ConnectorState.Idle, 0);
     }
     
     
@@ -57,25 +77,17 @@ public class Connector : MonoBehaviour
     {
         int d6 = Random.Range(1, 7);
 
-        switch (d6)
+        MoveCost = d6 switch
         {
-            default:
-                MoveCost = 1;
-                break;
-            case 4:
-            case 5:
-                MoveCost = 2;
-                break;
-            case 6:
-                MoveCost = 3;
-                break;
-        }
-        
-        
+            6 => 3,
+            4 or 5 => 2,
+            _ => 1
+        };
+
         visuals?.SetUp(MoveCost);
     }
-    private void OnEnable() { s_Connectors.Add(this); }
-    private void OnDisable() { s_Connectors.Remove(this); }
+    private void OnEnable() { s_allConnectors.Add(this); }
+    private void OnDisable() { s_allConnectors.Remove(this); }
 
     private void OnDestroy()
     {
