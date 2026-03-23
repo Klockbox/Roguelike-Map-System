@@ -148,8 +148,9 @@ public class MapManager : SimpleMonoBehaviorSingleton<MapManager>
 
     private void OnPlayerMiniReachedCurrentNode()
     {
-        if (!PlayerNode.Visited && !debug_SkipEncounter)
+        if ((!PlayerNode.Visited || PlayerNode.IsEncounterRepeatable() )&& !debug_SkipEncounter)
             EncounterManager.Instance.StartEncounter(PlayerNode.GetEncounter());
+        
         
         PlayerNode.Visited = true;
         

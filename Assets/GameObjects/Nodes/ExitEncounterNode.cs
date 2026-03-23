@@ -9,4 +9,5 @@ public class ExitEncounterNode : MonoBehaviour, IEncounterNode
     }
 
     public bool IsExit() => true;
+    public bool IsRepeatable() => false;
 }

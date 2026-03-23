@@ -9,4 +9,5 @@ public class ShopEncounterNode : MonoBehaviour, IEncounterNode
     }
 
     public bool IsExit() => false;
+    public bool IsRepeatable() => true;
 }

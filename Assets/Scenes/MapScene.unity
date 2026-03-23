@@ -3310,7 +3310,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerMini: {fileID: 604833703}
-  debug_SkipEncounter: 1
+  debug_SkipEncounter: 0
   nextMove:
     IsLegal: 0
     TargetedNode: {fileID: 0}

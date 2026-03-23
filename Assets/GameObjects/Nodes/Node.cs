@@ -76,6 +76,12 @@ public class Node : MonoBehaviour, IClickableObject
     
     // relay
     public MapEncounter GetEncounter() { return GetComponent<IEncounterNode>()?.GetEncounter(); }
+
+    public bool IsEncounterRepeatable()
+    {
+        IEncounterNode encounter = GetComponent<IEncounterNode>();
+        return encounter?.IsRepeatable() ?? false;
+    }
     
     // Node State Info
     #region NodeState

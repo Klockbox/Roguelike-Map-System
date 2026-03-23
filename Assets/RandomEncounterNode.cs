@@ -18,4 +18,5 @@ public class RandomEncounterNode : MonoBehaviour, IEncounterNode
     }
 
     public bool IsExit() => false;
+    public bool IsRepeatable() => false;
 }

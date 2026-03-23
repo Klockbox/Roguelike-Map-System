@@ -13,10 +13,12 @@ public class CombatEncounterNode : MonoBehaviour, IEncounterNode
     }
 
     public bool IsExit() => false;
+    public bool IsRepeatable() => false;
 }
 
 public interface IEncounterNode
 {
     MapEncounter GetEncounter();
     bool IsExit();
+    bool IsRepeatable();
 }
